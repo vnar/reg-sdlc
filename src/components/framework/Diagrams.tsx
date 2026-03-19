@@ -1,5 +1,6 @@
 import type {
   Binder,
+  FunctionalRole,
   GovernanceLayer,
   LifecyclePhase,
   Lane,
@@ -10,8 +11,9 @@ import type {
   RiskTier,
   ClassificationDimension,
 } from '../../types/framework'
+import { Fragment, useCallback, useMemo, useState } from 'react'
 import { clsx } from 'clsx'
-import { ArrowRight, ShieldCheck, Scale, TriangleAlert } from 'lucide-react'
+import { ArrowRight, Briefcase, CheckSquare, Cog, FlaskConical, Landmark, Lock, Monitor, Rocket, Scale, ShieldCheck, TriangleAlert } from 'lucide-react'
 
 function Chip({ text, tone }: { text: string; tone: 'slate' | 'blue' | 'emerald' | 'violet' | 'rose' }) {
   const cls =
@@ -146,8 +148,67 @@ export function RegulatoryOrbitMap({ items, compact }: { items: Regulation[]; co
 }
 
 export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
-  // A signature rigor staircase: each lane is a step with an icon + evidence/approval signals.
-  const toneForLane = (id: Lane['id']) => (id === 'A' ? 'slate' : id === 'B' ? 'blue' : id === 'C' ? 'emerald' : 'violet')
+  const laneColor = (id: Lane['id']) => {
+    if (id === 'A') return '#64748b'
+    if (id === 'B') return '#3b82f6'
+    if (id === 'C') return '#14b8a6'
+    return '#8b5cf6'
+  }
+
+  const laneDesc = (lane: Lane) => {
+    if (lane.id === 'A') return 'No clinical intent, no device nexus, no regulated output.'
+    if (lane.id === 'B') return 'Regulated process impact with bounded risk and no device nexus.'
+    if (lane.id === 'C') return 'Device-adjacent, clinical workflow, or lab-impacting software requiring comprehensive evidence.'
+    return 'Direct clinical decision support, SaMD, or device software requiring submission-grade proof.'
+  }
+
+  const intensityLevel = (id: Lane['id']) => (id === 'A' ? 1 : id === 'B' ? 2 : id === 'C' ? 3 : 4)
+
+  const dotBar = (filled: number, color: string) => (
+    <div className="flex items-center gap-1.5">
+      {[1, 2, 3, 4].map((n) => (
+        <span
+          key={n}
+          className="inline-flex h-2.5 w-2.5 rounded-full border border-white/10"
+          style={{ backgroundColor: n <= filled ? color : 'rgba(148,163,184,0.15)' }}
+        />
+      ))}
+    </div>
+  )
+
+  const laneById = (id: Lane['id']) => lanes.find((l) => l.id === id)!
+
+  const matrixRows = [
+    {
+      group: 'Identity',
+      rows: [
+        { label: 'Rigor level', value: (l: Lane) => l.lifecycleRigor },
+        { label: 'Evidence depth', value: (l: Lane) => l.evidenceDepth },
+        { label: 'Approval intensity', value: (l: Lane) => `${intensityLevel(l.id)} / 4` },
+        { label: 'IEC 62304 class', value: (l: Lane) => (l.id === 'A' ? '—' : l.id === 'B' ? 'Class A' : l.id === 'C' ? 'Class B' : 'Class C') },
+      ],
+    },
+    {
+      group: 'Evidence requirements',
+      rows: [
+        { label: 'Validation protocol (IQ/OQ/PQ)', has: (id: Lane['id']) => id !== 'A' },
+        { label: 'Formal traceability matrix', has: (id: Lane['id']) => id === 'C' || id === 'D' },
+        { label: 'Risk management file (ISO 14971)', has: (id: Lane['id']) => id === 'C' || id === 'D' },
+        { label: 'Validation Summary Report', has: (id: Lane['id']) => id === 'C' || id === 'D' },
+        { label: 'Regulatory submission package', has: (id: Lane['id']) => id === 'D' },
+      ],
+    },
+    {
+      group: 'Governance controls',
+      rows: [
+        { label: 'Change control procedure', has: (id: Lane['id']) => id !== 'A' },
+        { label: 'CCB approval required', has: (id: Lane['id']) => id === 'C' || id === 'D' },
+        { label: 'Post-market surveillance', has: (id: Lane['id']) => id === 'D' },
+        { label: 'SOUP management', has: (id: Lane['id']) => id === 'C' || id === 'D' },
+        { label: '21 CFR Part 11 audit trail', has: (id: Lane['id']) => id !== 'A' },
+      ],
+    },
+  ] as const
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
@@ -156,67 +217,242 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
         <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
       </div>
 
-      <div className="relative grid gap-4 lg:grid-cols-4 lg:items-end">
-        {lanes.map((lane, idx) => {
-          const tone = toneForLane(lane.id)
-          const stepY = idx * 6
-          return (
-            <div key={lane.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Lane {lane.id}</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-100">{lane.subtitle}</p>
+      <div className="relative">
+        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">SDLC Lanes</p>
+        <h3 className="mt-2 text-3xl font-semibold text-slate-100">Four lanes. One right answer per project.</h3>
+        <p className="mt-2 text-sm text-slate-300 max-w-2xl">
+          Classification output determines lane. Lane determines evidence depth, controls required, approval intensity, and governance overhead.
+        </p>
+
+        {/* SECTION 1 — Escalation spine */}
+        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/30 p-4">
+          <div className="flex items-start">
+            <div
+              className="mt-[18px] h-[2px] flex-1 rounded-full"
+              style={{ background: `linear-gradient(90deg, rgba(100,116,139,0.1) 0%, ${laneColor('A')} 100%)` }}
+            />
+            {lanes.map((lane, idx) => (
+              <div key={lane.id} className="flex items-start flex-1 min-w-0">
+                <div className="w-full min-w-[92px] text-center">
+                  <div
+                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border font-semibold"
+                    style={{ borderColor: `${laneColor(lane.id)}99`, backgroundColor: `${laneColor(lane.id)}22`, color: laneColor(lane.id) }}
+                  >
+                    {lane.id}
+                  </div>
+                  <p className="mt-2 text-[11px] font-semibold text-slate-100">{lane.name}</p>
+                  <p className="text-[11px] text-slate-500">{lane.lifecycleRigor}</p>
                 </div>
-                <div className="flex flex-col items-end">
-                  <Chip text={lane.lifecycleRigor} tone={tone} />
-                  <span className="mt-2 inline-flex items-center rounded-md border border-white/10 bg-slate-950/30 px-2.5 py-1 text-xs text-slate-300">
-                    Evidence: {lane.evidenceDepth}
+                {idx < lanes.length - 1 && (
+                  <div
+                    className="mx-2 mt-[18px] h-[2px] flex-1 rounded-full"
+                    style={{
+                      background: `linear-gradient(90deg, ${laneColor(lane.id)} 0%, ${laneColor(lanes[idx + 1].id)} 100%)`,
+                    }}
+                  />
+                )}
+              </div>
+            ))}
+            <div
+              className="mt-[18px] h-[2px] flex-1 rounded-full"
+              style={{ background: `linear-gradient(90deg, ${laneColor('D')} 0%, rgba(139,92,246,0.1) 100%)` }}
+            />
+          </div>
+        </div>
+
+        {/* SECTION 2 — Four lane cards */}
+        <div className="mt-5 grid gap-3 lg:grid-cols-4">
+          {lanes.map((lane) => {
+            const c = laneColor(lane.id)
+            const fill = intensityLevel(lane.id)
+            const triggerTags = lane.triggers
+
+            return (
+              <div
+                key={lane.id}
+                className="rounded-2xl border border-white/10 bg-slate-900/45 p-4"
+                style={{ borderTopColor: c, borderTopWidth: 3, borderTopStyle: 'solid' }}
+              >
+                {/* 1. Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-slate-400">Lane {lane.id}</p>
+                    <p className="mt-1 text-xl font-semibold text-slate-100">{lane.subtitle}</p>
+                  </div>
+                  <span
+                    className="rounded-full border px-2.5 py-1 text-xs font-semibold"
+                    style={{ borderColor: `${c}66`, color: c, backgroundColor: `${c}1A` }}
+                  >
+                    {lane.lifecycleRigor}
                   </span>
                 </div>
-              </div>
+                <p className="mt-2 text-sm text-slate-300">{laneDesc(lane)}</p>
 
-              <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/30 p-3">
-                <p className="text-xs uppercase tracking-wider text-slate-500">Controls required</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {lane.controlsRequired.slice(0, 3).map((c) => (
-                    <span key={c} className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">
-                      {c}
-                    </span>
+                {/* 2. Intensity meter */}
+                <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/35 p-3">
+                  {[
+                    ['Approval', lane.approvalIntensity],
+                    ['Evidence', lane.evidenceDepth],
+                    ['Rigor', lane.lifecycleRigor],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between gap-2 py-1">
+                      <span className="text-xs text-slate-400">{label}</span>
+                      {dotBar(fill, c)}
+                      <span className="text-xs text-slate-200">{value}</span>
+                    </div>
                   ))}
-                  {lane.controlsRequired.length > 3 && (
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">+{lane.controlsRequired.length - 3}</span>
-                  )}
+                </div>
+
+                {/* 3. Controls Required */}
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Controls required</p>
+                  <ul className="mt-2 list-disc pl-5 space-y-1 text-sm text-slate-300">
+                    {lane.controlsRequired.map((control) => (
+                      <li key={control}>{control}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* 4. Example Software */}
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Example software</p>
+                  <span
+                    className="mt-2 inline-flex rounded-lg border px-2.5 py-1 text-xs italic"
+                    style={{ borderColor: `${c}55`, color: c, backgroundColor: `${c}14` }}
+                  >
+                    {lane.examples[0]}
+                  </span>
+                </div>
+
+                {/* 5. Classification Triggers */}
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Classification triggers</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {triggerTags.map((t) => (
+                      <span key={t} className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-slate-400">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )
+          })}
+        </div>
 
-              <div className="mt-3 text-xs text-slate-400" style={{ transform: `translateY(${stepY}px)` }}>
-                {lane.examples[0]}
-              </div>
+        {/* SECTION 3 — Comparison matrix */}
+        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/20 p-4">
+          <h4 className="text-2xl font-semibold text-slate-100">Lane comparison matrix</h4>
+          <p className="mt-1 text-sm text-slate-400">Every attribute across all four lanes at a glance.</p>
 
-              <div className="mt-3">
-                <div className="h-2 w-full rounded-full bg-white/5">
-                  <div
-                    className={`h-2 rounded-full ${tone === 'slate' ? 'bg-slate-400/70' : tone === 'blue' ? 'bg-blue-400/70' : tone === 'emerald' ? 'bg-emerald-400/70' : 'bg-violet-400/70'}`}
-                    style={{ width: `${lane.id === 'A' ? 25 : lane.id === 'B' ? 45 : lane.id === 'C' ? 70 : 100}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs text-slate-400">Approval intensity</p>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-        <Chip text="Rigor progression" tone="violet" />
-        <Chip text="Evidence depth signals" tone="blue" />
-        <Chip text="Approval intensity" tone="emerald" />
+          <div className="mt-4 overflow-auto rounded-xl border border-white/10 bg-slate-950/25">
+            <table className="w-full min-w-[980px] text-left">
+              <thead className="text-xs uppercase tracking-wider text-slate-400 bg-white/[0.02]">
+                <tr>
+                  <th className="px-3 py-2">Attribute</th>
+                  {(['A', 'B', 'C', 'D'] as const).map((id) => (
+                    <th key={id} className="px-3 py-2" style={{ color: laneColor(id) }}>
+                      Lane {id}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {matrixRows.map((section) => (
+                  <Fragment key={section.group}>
+                    <tr key={section.group}>
+                      <td colSpan={5} className="px-3 py-2 text-[11px] uppercase tracking-wider text-slate-500 bg-white/[0.01]">
+                        {section.group}
+                      </td>
+                    </tr>
+                    {section.rows.map((row) => (
+                      <tr key={`${section.group}-${row.label}`} className="border-t border-white/10 hover:bg-white/[0.03]">
+                        <td className="px-3 py-2 text-sm text-slate-300">{row.label}</td>
+                        {(['A', 'B', 'C', 'D'] as const).map((id) => {
+                          const lane = laneById(id)
+                          const display = 'value' in row ? row.value(lane) : row.has(id) ? '✓' : '—'
+                          const isCheck = display === '✓'
+                          return (
+                            <td key={`${row.label}-${id}`} className="px-3 py-2 text-sm">
+                              {isCheck ? (
+                                <span style={{ color: laneColor(id) }}>✓</span>
+                              ) : display === '—' ? (
+                                <span className="text-slate-500">—</span>
+                              ) : (
+                                <span className={clsx(id === 'A' ? 'text-slate-300' : id === 'B' ? 'text-blue-300' : id === 'C' ? 'text-teal-300' : 'text-violet-300')}>
+                                  {display}
+                                </span>
+                              )}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
 export function LifecycleSwimlane({ phases }: { phases: LifecyclePhase[] }) {
+  type PhaseType = 'execution' | 'validation' | 'release' | 'operations'
+
+  const phaseTypeByIndex = (idx: number): PhaseType => {
+    if (idx <= 3) return 'execution'
+    if (idx === 4) return 'validation'
+    if (idx === 5) return 'release'
+    return 'operations'
+  }
+
+  const phaseUi = (type: PhaseType) => {
+    switch (type) {
+      case 'validation':
+        return {
+          label: 'Validation',
+          badge: 'border-violet-400/35 bg-violet-400/10 text-violet-100',
+          nodeBorderBg: 'border-violet-400/60 bg-violet-400/10 text-violet-100',
+          nodeText: 'text-violet-100',
+          line: 'bg-violet-400/40',
+          gateIcon: 'text-violet-300',
+        }
+      case 'release':
+        return {
+          label: 'Release',
+          badge: 'border-emerald-400/35 bg-emerald-400/10 text-emerald-100',
+          nodeBorderBg: 'border-emerald-400/60 bg-emerald-400/10 text-emerald-100',
+          nodeText: 'text-emerald-100',
+          line: 'bg-emerald-400/40',
+          gateIcon: 'text-emerald-200',
+        }
+      case 'operations':
+        return {
+          label: 'Operations',
+          badge: 'border-amber-400/35 bg-amber-400/10 text-amber-100',
+          nodeBorderBg: 'border-amber-400/60 bg-amber-400/10 text-amber-100',
+          nodeText: 'text-amber-100',
+          line: 'bg-amber-400/40',
+          gateIcon: 'text-amber-200',
+        }
+      case 'execution':
+      default:
+        return {
+          label: 'Execution',
+          badge: 'border-indigo-400/35 bg-indigo-400/10 text-indigo-100',
+          nodeBorderBg: 'border-indigo-400/60 bg-indigo-400/10 text-indigo-100',
+          nodeText: 'text-indigo-100',
+          line: 'bg-indigo-400/40',
+          gateIcon: 'text-indigo-300',
+        }
+    }
+  }
+
+  const phaseTitle = (p: LifecyclePhase) => p.name.split(':')[1]?.trim() ?? p.name
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
       <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -230,44 +466,91 @@ export function LifecycleSwimlane({ phases }: { phases: LifecyclePhase[] }) {
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Lifecycle Architecture</p>
             <h3 className="mt-2 text-2xl font-semibold text-slate-100">Phase gates, outputs, and accountable sign-off</h3>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">0 → Intake</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">4 → Validation</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">5 → Release</span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">6 → Post-market</span>
+          <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Execution →</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Validation →</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Release →</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Operations</span>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3">
-          <div className="flex flex-wrap items-start gap-3 lg:flex-nowrap lg:overflow-x-auto">
-            {phases.map((p, idx) => (
-              <div key={p.id} className="min-w-[280px] rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs uppercase tracking-wider text-slate-400">Phase {p.id}</p>
-                  <Chip
-                    text={idx === 4 ? 'Validation' : idx === 5 ? 'Release' : idx === 6 ? 'Operations' : 'Execution'}
-                    tone={idx >= 5 ? 'violet' : idx >= 3 ? 'emerald' : 'blue'}
-                  />
+        {/* Pipeline strip: connected numbered nodes */}
+        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/30 p-4">
+          <div className="flex items-center flex-nowrap">
+            {phases.map((p, idx) => {
+              const t = phaseTypeByIndex(idx)
+              const ui = phaseUi(t)
+
+              const title = phaseTitle(p)
+              const parts = title.includes(' & ')
+                ? title.split(' & ').map((s) => s.trim())
+                : [title]
+
+              return (
+                <div key={p.id} className="flex items-center flex-1 min-w-0">
+                  <div className="flex min-w-0 w-full flex-col items-center">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full border ${ui.nodeBorderBg}`}>
+                      <span className="text-sm font-semibold">{p.id}</span>
+                    </div>
+                    <div className="mt-2 text-center text-[9px] leading-3 text-slate-300">
+                      {parts.length > 1 ? (
+                        <>
+                          <div className="font-semibold text-[9px] text-slate-100">{parts[0]}</div>
+                          <div className="font-semibold text-[9px] text-slate-100">& {parts[1]}</div>
+                        </>
+                      ) : (
+                        <div className="font-semibold text-[9px] text-slate-100">{parts[0]}</div>
+                      )}
+                      <div className={`mt-0.5 text-[8px] uppercase tracking-wider ${ui.nodeText}`}>{ui.label}</div>
+                    </div>
+                  </div>
+
+                  {idx < phases.length - 1 && <div className={`h-px w-3 flex-none ${ui.line}`} />}
                 </div>
-                <h4 className="mt-2 text-lg font-semibold text-slate-100">{p.name.split(':')[1]?.trim() ?? p.name}</h4>
-                <p className="mt-2 text-sm text-slate-300">{p.purpose}</p>
-                <p className="mt-3 text-xs uppercase tracking-wider text-slate-500">Major outputs</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {p.outputs.slice(0, 2).map((o) => (
-                    <span key={o} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                      {o}
-                    </span>
-                  ))}
-                  {p.outputs.length > 2 && (
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">+{p.outputs.length - 2}</span>
-                  )}
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Phase cards in a single horizontal row */}
+        <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/20 p-4">
+          <div className="flex flex-nowrap items-stretch gap-3">
+            {phases.map((p, idx) => {
+              const t = phaseTypeByIndex(idx)
+              const ui = phaseUi(t)
+
+              return (
+                <div
+                  key={p.id}
+                  className="flex-1 min-w-0 rounded-2xl border border-white/10 bg-slate-950/30 p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-wider text-slate-400">Phase {p.id}</p>
+                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${ui.badge}`}>{ui.label}</span>
+                  </div>
+
+                  <h4 className="mt-2 text-[13px] font-semibold text-slate-100 leading-5">{phaseTitle(p)}</h4>
+                  <p className="mt-2 text-[12px] leading-4 text-slate-300">{p.purpose}</p>
+
+                  <p className="mt-3 text-[11px] uppercase tracking-wider text-slate-500">Outputs</p>
+                  <ul className="mt-2 list-disc pl-5 space-y-0.5 text-[12px] text-slate-300">
+                    {p.outputs.map((o) => (
+                      <li key={o}>{o}</li>
+                    ))}
+                  </ul>
+
+                  {/* Gate row */}
+                  <div className="mt-4 border-t border-white/10 pt-3 flex flex-wrap gap-3">
+                    {p.exitCriteria.map((c) => (
+                      <div key={c} className="flex items-center gap-2 text-[13px] text-slate-200">
+                        <ShieldCheck size={16} className={ui.gateIcon} />
+                        <span>{c}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Exit criteria</p>
-                  <p className="mt-2 text-sm text-slate-200">{p.exitCriteria[0]}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -276,6 +559,40 @@ export function LifecycleSwimlane({ phases }: { phases: LifecyclePhase[] }) {
 }
 
 export function EvidenceVault({ binders }: { binders: Binder[] }) {
+  const totalDocuments = binders.reduce((sum, b) => sum + b.contents.length, 0)
+  const totalBinders = binders.length
+  const phasesCovered = Array.from(new Set(binders.flatMap((b) => b.lifecyclePhases))).length
+
+  const phaseNumber = (s: string) => {
+    const m = s.match(/\d+/)
+    return m ? m[0] : s
+  }
+
+  const binderTopBorderColor = (b: Binder) => {
+    // Match the requested binder-type color mapping.
+    if (b.id === 1) return '#818CF8' // indigo
+    if (b.id === 2) return '#A78BFA' // purple
+    if (b.id === 3) return '#22D3EE' // cyan
+    if (b.id === 4) return '#34D399' // green
+    return '#FBBF24' // amber (Binder 5)
+  }
+
+  const binderDocTag = (b: Binder): 'Core' | 'Lane' | 'Regulated' => {
+    // Derived from lane coverage for the binder (no data changes; only presentation tags).
+    // Core = required all lanes.
+    if (b.associatedLanes.length === 4) return 'Core'
+    // Regulated = required in regulated lanes only (no A/B lanes).
+    if (!b.associatedLanes.includes('A') && !b.associatedLanes.includes('B') && b.associatedLanes.includes('D')) return 'Regulated'
+    // Lane = required by lane assignment.
+    return 'Lane'
+  }
+
+  const docTagClasses = (tag: 'Core' | 'Lane' | 'Regulated') => {
+    if (tag === 'Core') return 'bg-slate-800/50 border border-white/10 text-slate-200'
+    if (tag === 'Lane') return 'bg-indigo-500/10 border border-indigo-400/30 text-indigo-200'
+    return 'bg-rose-500/10 border border-rose-400/30 text-rose-200'
+  }
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
       <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -283,7 +600,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
         <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
-      <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Evidence Architecture</p>
           <h3 className="mt-2 text-2xl font-semibold text-slate-100">Five binders. Submission-grade proof.</h3>
@@ -292,34 +609,193 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {binders.map((b) => (
-            <div key={b.id} className="min-w-[220px] rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <p className="text-xs uppercase tracking-wider text-slate-400">{b.name}</p>
-              <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/30 p-3">
-                <p className="text-sm font-semibold text-slate-100">{b.purpose}</p>
-                <div className="mt-3 space-y-2">
-                  {b.contents.slice(0, 4).map((c) => (
-                    <div key={c} className="flex items-center gap-2 text-xs text-slate-300">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400/60" />
-                      {c}
-                    </div>
+        <div className="mt-4 flex flex-nowrap items-center gap-3 overflow-x-auto pb-1">
+          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 whitespace-nowrap">
+            <span className="font-semibold text-slate-100">{totalDocuments}</span> total documents
+          </div>
+          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 whitespace-nowrap">
+            <span className="font-semibold text-slate-100">{totalBinders}</span> binders
+          </div>
+          <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 whitespace-nowrap">
+            <span className="font-semibold text-slate-100">{phasesCovered}</span> phases covered
+          </div>
+        </div>
+
+        <div className="w-full">
+          {(() => {
+            const binderTop = binders.filter((b) => b.id >= 1 && b.id <= 4)
+            const binder5 = binders.find((b) => b.id === 5) ?? null
+
+            const renderBinderCard = (b: Binder) => {
+              const tag = binderDocTag(b)
+              const isBinder5 = b.id === 5
+              const topColor = binderTopBorderColor(b)
+              const phases = b.lifecyclePhases.map(phaseNumber)
+
+              const binderHeader = (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs uppercase tracking-wider text-slate-300">{b.name}</p>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-slate-300">
+                      {b.contents.length} docs
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-slate-100">{b.purpose}</p>
+                </>
+              )
+
+              const phasesPills = (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {phases.map((p) => (
+                    <span key={p} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-300">
+                      {p}
+                    </span>
                   ))}
-                  {b.contents.length > 4 && <p className="text-xs text-slate-400">+{b.contents.length - 4} more items</p>}
                 </div>
+              )
+
+              const docRows = (
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Documents</p>
+                  <div className="mt-2 space-y-1">
+                    {b.contents.map((c) => (
+                      <div key={c} className="flex items-center justify-between gap-3">
+                        <span className="text-xs text-slate-300">{c}</span>
+                        <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${docTagClasses(tag)}`}>{tag}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+
+              return (
+                <div
+                  className={[
+                    'rounded-2xl border border-white/10 bg-slate-900/50 p-4 overflow-hidden',
+                    isBinder5 ? 'col-span-3' : '',
+                  ].join(' ')}
+                  style={{ borderTopColor: topColor, borderTopWidth: 3, borderTopStyle: 'solid' }}
+                >
+                  {isBinder5 ? (
+                    <div className="grid grid-cols-[260px_1fr] gap-4 items-start">
+                      <div>
+                        {binderHeader}
+                        {phasesPills}
+                      </div>
+                      <div>
+                        <div className="mt-1">
+                          <p className="text-xs uppercase tracking-wider text-slate-500">Documents</p>
+                          <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-2">
+                            {b.contents.map((c) => (
+                              <div key={c} className="flex items-center justify-between gap-3">
+                                <span className="text-[11px] text-slate-300 leading-4">{c}</span>
+                                <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${docTagClasses(tag)}`}>{tag}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {binderHeader}
+                      {docRows}
+                      {phasesPills}
+                    </>
+                  )}
+                </div>
+              )
+            }
+
+            return (
+              <>
+                <div className="grid grid-cols-4 gap-4 items-start">
+                  {binderTop.map((b) => (
+                    <div key={b.id}>{renderBinderCard(b)}</div>
+                  ))}
+                </div>
+
+                {binder5 && <div className="mt-4">{renderBinderCard(binder5)}</div>}
+              </>
+            )
+          })()}
+
+          {/* Legend */}
+          <div className="mt-5 rounded-2xl border border-white/10 bg-slate-950/20 p-4">
+            <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded bg-slate-800/50 border border-white/10" />
+                Core
               </div>
-              <p className="mt-3 text-xs text-slate-400">
-                Connected phases: {b.lifecyclePhases.join(', ')}
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded bg-indigo-500/10 border border-indigo-400/30" />
+                Lane
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded bg-rose-500/10 border border-rose-400/30" />
+                Regulated
+              </div>
             </div>
-          ))}
+            <p className="mt-2 text-sm text-slate-300">
+              Core = required all lanes. Lane = required by lane assignment. Regulated = required in regulated lanes only.
+            </p>
+          </div>
         </div>
       </div>
     </div>
   )
 }
 
-export function GovernanceDecisionArchitecture({ layers }: { layers: GovernanceLayer[] }) {
+export function GovernanceDecisionArchitecture({ layers, roles }: { layers: GovernanceLayer[]; roles: FunctionalRole[] }) {
+  const layerColor = (idx: number) => {
+    if (idx === 0) return '#3b82f6'
+    if (idx === 1) return '#6366f1'
+    if (idx === 2) return '#f59e0b'
+    return '#fb7185'
+  }
+
+  const layerSubLabel = (idx: number) => {
+    if (idx === 0) return 'Execution'
+    if (idx === 1) return 'Control'
+    if (idx === 2) return 'Authorization'
+    return 'Surveillance'
+  }
+
+  const layerCode = (idx: number) => `L${idx + 1}`
+
+  const membersForLayer = (l: GovernanceLayer, idx: number) => {
+    if ((idx === 1 || idx === 2) && !l.members.includes('Engineering Lead')) return [...l.members, 'Engineering Lead']
+    return l.members
+  }
+
+  const approvesWithSlots = (l: GovernanceLayer) => {
+    const a = l.approves.slice(0, 3)
+    while (a.length < 3) a.push('—')
+    return a
+  }
+
+  const roleIcon = (role: string) => {
+    if (role === 'Product / Business') return <Briefcase size={14} />
+    if (role === 'Engineering') return <Cog size={14} />
+    if (role === 'Quality / Compliance') return <CheckSquare size={14} />
+    if (role === 'Regulatory Affairs') return <Landmark size={14} />
+    if (role === 'Security / Privacy') return <Lock size={14} />
+    if (role === 'System Owner') return <Monitor size={14} />
+    if (role === 'Operations / DevOps') return <Rocket size={14} />
+    return <FlaskConical size={14} />
+  }
+
+  const participationMap: Record<string, boolean[]> = {
+    'Product / Business': [true, false, false, false],
+    Engineering: [true, true, true, false],
+    'Quality / Compliance': [false, true, true, true],
+    'Regulatory Affairs': [false, true, true, true],
+    'Security / Privacy': [false, true, false, false],
+    'System Owner': [true, false, true, true],
+    'Operations / DevOps': [false, false, true, true],
+    'Clinical / Lab SMEs': [false, false, false, true],
+  }
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
       <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -328,55 +804,159 @@ export function GovernanceDecisionArchitecture({ layers }: { layers: GovernanceL
       </div>
 
       <div className="relative">
-        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Governance Model</p>
-        <h3 className="mt-2 text-2xl font-semibold text-slate-100">Decision architecture across four layers</h3>
-        <p className="mt-2 text-sm text-slate-300">
-          Each governance layer defines members, decision rights, approvals, and escalation paths. Together they make compliance operational.
-        </p>
-
-        <div className="mt-6 grid gap-3 lg:grid-cols-2">
-          {layers.map((l) => (
-            <div key={l.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h4 className="text-lg font-semibold text-slate-100">{l.name}</h4>
-                <div className="flex items-center gap-2 text-xs text-slate-300">
-                  <Scale size={14} /> Decision rights
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-slate-300">{l.purpose}</p>
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Members</p>
-                  <p className="mt-2 text-sm text-slate-200">{l.members.slice(0, 3).join(', ')}{l.members.length>3?'…':''}</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Approves</p>
-                  <p className="mt-2 text-sm text-slate-200">{l.approves.slice(0, 2).join(', ')}{l.approves.length>2?'…':''}</p>
-                </div>
-              </div>
-              <p className="mt-3 text-xs text-slate-400">
-                Escalates to: {l.escalationTo}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {l.decisionRights.slice(0, 3).map((d) => (
-                  <span key={d} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                    {d}
-                  </span>
-                ))}
+        <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Governance Model</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-100">Decision architecture across four layers</h3>
+            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              Each layer defines members, decision rights, approvals, and escalation paths. Together they convert policy into controlled delivery.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-indigo-400/20 bg-slate-900/45 p-4 pl-0">
+            <div className="flex gap-3">
+              <div className="w-1 shrink-0 rounded-full bg-indigo-400/90" />
+              <div>
+                <p className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-indigo-200">
+                  <ShieldCheck size={12} />
+                  Signature idea
+                </p>
+                <p className="mt-1 text-sm italic text-slate-300">
+                  Governance isn't paperwork. It's accountable decision routing that converts policy into controlled delivery.
+                </p>
               </div>
             </div>
-          ))}
+          </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/40 p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 text-violet-300" size={18} />
-            <div>
-              <p className="font-semibold text-slate-100">Signature idea</p>
-              <p className="mt-1 text-sm text-slate-300">
-                Governance isn’t paperwork. It’s accountable decision routing that converts policy into controlled delivery.
-              </p>
-            </div>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/30 p-4">
+          <div className="flex items-start">
+            <div className="mt-[18px] h-[2px] flex-1 rounded-full" style={{ background: `linear-gradient(90deg, rgba(59,130,246,0.1) 0%, ${layerColor(0)} 100%)` }} />
+            {layers.map((l, idx) => (
+              <div key={l.id} className="flex items-start flex-1 min-w-0">
+                <div className="w-full min-w-[92px] text-center">
+                  <div
+                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border text-xs font-semibold"
+                    style={{ borderColor: `${layerColor(idx)}99`, backgroundColor: `${layerColor(idx)}20`, color: layerColor(idx) }}
+                  >
+                    {layerCode(idx)}
+                  </div>
+                  <p className="mt-2 text-[11px] font-semibold text-slate-100">{l.name}</p>
+                  <p className="text-[11px] text-slate-500">{layerSubLabel(idx)}</p>
+                </div>
+                {idx < layers.length - 1 && (
+                  <div
+                    className="mx-2 mt-[18px] h-[2px] flex-1 rounded-full"
+                    style={{ background: `linear-gradient(90deg, ${layerColor(idx)} 0%, ${layerColor(idx + 1)} 100%)` }}
+                  />
+                )}
+              </div>
+            ))}
+            <div className="mt-[18px] h-[2px] flex-1 rounded-full" style={{ background: `linear-gradient(90deg, ${layerColor(3)} 0%, rgba(251,113,133,0.1) 100%)` }} />
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 lg:grid-cols-4">
+          {layers.map((l, idx) => {
+            const color = layerColor(idx)
+            const nextColor = layerColor(Math.min(idx + 1, 3))
+            const members = membersForLayer(l, idx)
+            const approves = approvesWithSlots(l)
+
+            return (
+              <div
+                key={l.id}
+                className="rounded-2xl border border-white/10 bg-slate-900/45 p-4"
+                style={{ borderTopColor: color, borderTopWidth: 3, borderTopStyle: 'solid' }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-slate-400">Layer {idx + 1}</p>
+                    <p className="mt-1 text-xl font-semibold leading-tight text-slate-100">{l.name}</p>
+                  </div>
+                  <span className="rounded-full border px-2 py-1 text-[10px] uppercase tracking-wider" style={{ borderColor: `${color}66`, color, backgroundColor: `${color}1A` }}>
+                    Decision rights
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-slate-300">{l.purpose}</p>
+
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Members</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {members.map((m) => (
+                      <span key={`${l.id}-${m}`} className="rounded-md border px-2 py-0.5 text-[11px]" style={{ borderColor: `${color}55`, color, backgroundColor: `${color}14` }}>
+                        {m}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Approves</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+                    {approves.map((a, aIdx) => (
+                      <li key={`${l.id}-approves-${aIdx}`}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Decision rights</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {l.decisionRights.map((d) => (
+                      <span key={`${l.id}-${d}`} className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-slate-400">
+                        {d}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-white/10 pt-2">
+                  <p className="text-xs uppercase tracking-wider text-slate-500">Escalates to</p>
+                  <p className="mt-1 text-sm font-medium">
+                    <span className="text-slate-400">→ </span>
+                    <span style={{ color: nextColor }}>{l.escalationTo}</span>
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="mt-6">
+          <h4 className="text-2xl font-semibold text-slate-100">Functional ownership</h4>
+          <p className="mt-1 text-sm text-slate-400">Who owns what across the operating model — and which governance layers they participate in.</p>
+          <div className="mt-3 grid gap-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/25 lg:grid-cols-4">
+            {roles.map((role) => {
+              const pattern = participationMap[role.role] ?? [false, false, false, false]
+              return (
+                <div key={role.id} className="border-b border-r border-white/10 p-4 lg:[&:nth-child(4n)]:border-r-0 [&:nth-last-child(-n+4)]:border-b-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-base font-semibold text-slate-100">{role.role}</p>
+                    <span className="text-slate-300">{roleIcon(role.role)}</span>
+                  </div>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+                    {role.owns.map((item) => (
+                      <li key={`${role.id}-${item}`}>{item}</li>
+                    ))}
+                  </ul>
+                  <div className="mt-3">
+                    <p className="text-[10px] uppercase tracking-wider text-slate-500">Layer participation</p>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      {[0, 1, 2, 3].map((layerIdx) => (
+                        <span
+                          key={`${role.id}-dot-${layerIdx}`}
+                          className="inline-flex h-2.5 w-2.5 rounded-full border"
+                          style={{
+                            borderColor: `${layerColor(layerIdx)}66`,
+                            backgroundColor: pattern[layerIdx] ? layerColor(layerIdx) : 'rgba(148,163,184,0.12)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -385,37 +965,91 @@ export function GovernanceDecisionArchitecture({ layers }: { layers: GovernanceL
 }
 
 export function ApprovalFlow({ tiers }: { tiers: RiskTier[] }) {
+  const tierUi = (idx: number) => {
+    if (idx === 0) {
+      return {
+        borderTop: '#34D399',
+        label: 'text-emerald-300',
+        bubble: 'bg-emerald-500/15 border-emerald-400/40 text-emerald-200',
+        step: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-100',
+      }
+    }
+    if (idx === 1) {
+      return {
+        borderTop: '#F59E0B',
+        label: 'text-amber-300',
+        bubble: 'bg-amber-500/15 border-amber-400/40 text-amber-100',
+        step: 'border-amber-400/30 bg-amber-500/10 text-amber-100',
+      }
+    }
+    return {
+      borderTop: '#FB7185',
+      label: 'text-rose-300',
+      bubble: 'bg-rose-500/15 border-rose-400/40 text-rose-100',
+      step: 'border-rose-400/30 bg-rose-500/10 text-rose-100',
+    }
+  }
+
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 p-4">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-5 h-72 w-72 rounded-full bg-rose-500/10 blur-3xl" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent_40%)]" />
       </div>
 
       <div className="relative">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Approval Model</p>
-        <h3 className="mt-2 text-2xl font-semibold text-slate-100">Risk-tiered change approvals</h3>
-        <p className="mt-2 text-sm text-slate-300">
+        <h3 className="mt-1.5 text-xl font-semibold text-slate-100">Risk-tiered change approvals</h3>
+        <p className="mt-1 text-sm text-slate-300">
           Approval rigor increases with risk. This creates a predictable governance path from minor updates to major claims-affecting changes.
         </p>
 
-        <div className="mt-6 grid gap-3 lg:grid-cols-3">
-          {tiers.map((t) => (
-            <div key={t.id} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
+        <div className="mt-4 rounded-xl border border-white/10 bg-slate-900/30 px-3 py-2">
+          <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-slate-500">
+            <span>Low risk</span>
+            <span>High risk</span>
+          </div>
+          <div className="mt-2 h-[3px] rounded-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-400" />
+        </div>
+
+        <div className="mt-4 grid gap-2.5 lg:grid-cols-3">
+          {tiers.map((t, idx) => {
+            const ui = tierUi(idx)
+            const steps = t.governancePath.split(/\s*->\s*/g).filter(Boolean)
+
+            return (
+            <div
+              key={t.id}
+              className="group relative rounded-2xl border border-white/10 bg-slate-900/55 p-3.5 transition-all duration-200 hover:border-white/20 hover:bg-slate-900/70 hover:-translate-y-0.5"
+              style={{ borderTopColor: ui.borderTop, borderTopWidth: 3, borderTopStyle: 'solid' }}
+            >
+              <div
+                className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 blur-2xl transition-opacity duration-200 group-hover:opacity-100"
+                style={{ background: idx === 0 ? 'rgba(52,211,153,0.08)' : idx === 1 ? 'rgba(245,158,11,0.08)' : 'rgba(251,113,133,0.08)' }}
+              />
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Risk tier</p>
-                  <p className="mt-1 text-lg font-semibold text-slate-100">{t.name}</p>
+                  <p className={`text-[10px] uppercase tracking-wider ${ui.label}`}>Risk tier {idx + 1}</p>
+                  <p className="mt-1 text-lg font-semibold leading-tight text-slate-100">{t.name}</p>
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-                  Required approvers: {t.requiredApprovers.length}
-                </span>
+                <div className={`flex h-12 w-12 flex-col items-center justify-center rounded-lg border ${ui.bubble}`}>
+                  <span className="text-xl font-semibold leading-none">{t.requiredApprovers.length}</span>
+                  <span className="mt-0.5 text-[9px] uppercase tracking-wider">Approvers</span>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-slate-300">{t.description}</p>
-              <p className="mt-3 text-xs uppercase tracking-wider text-slate-500">Governance path</p>
-              <p className="mt-2 text-sm text-slate-200">{t.governancePath}</p>
+              <p className="mt-2 text-sm leading-5 text-slate-300">{t.description}</p>
+              <p className="mt-3 text-[10px] uppercase tracking-wider text-slate-500">Governance path</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {steps.map((step, sIdx) => (
+                  <div key={`${t.id}-${step}-${sIdx}`} className="flex items-center gap-1.5">
+                    <span className={`rounded-md border px-2 py-1 text-[11px] font-medium ${ui.step}`}>{step}</span>
+                    {sIdx < steps.length - 1 && <span className="text-xs text-slate-500">→</span>}
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </div>
@@ -423,136 +1057,291 @@ export function ApprovalFlow({ tiers }: { tiers: RiskTier[] }) {
 }
 
 export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links: TraceLink[]; selectedId: string | null; onSelect: (id: string) => void }) {
-  // A simple relationship map laid out horizontally: Regulation -> Requirement -> Risk -> Design -> Test -> Approval -> Artifact
-  const x = [60, 170, 260, 360, 440, 520, 620]
-  const y = 150
+  type TraceStatus = 'verified' | 'partial' | 'gap'
+  type StageTone = 'indigo' | 'purple' | 'red' | 'cyan' | 'green' | 'amber' | 'violet'
 
-  const selected = links.find((l) => l.id === selectedId) ?? null
+  const [filter, setFilter] = useState('')
+  const selected = links.find((l) => l.id === selectedId) ?? links[0] ?? null
 
-  const nodeTone = (idx: number) => (idx <= 2 ? 'rgba(59,130,246,0.55)' : idx <= 4 ? 'rgba(34,197,94,0.45)' : 'rgba(168,85,247,0.45)')
+  const statusForLink = useCallback((l: TraceLink): TraceStatus => {
+    const required = [l.regulation, l.requirement, l.risk, l.design, l.test, l.approval, l.artifact]
+    const present = required.filter(Boolean).length
+    if (present === required.length) return 'verified'
+    if (present >= 5) return 'partial'
+    return 'gap'
+  }, [])
+
+  const statusChip = (s: TraceStatus) =>
+    s === 'verified'
+      ? 'border-emerald-400/30 bg-emerald-500/12 text-emerald-200'
+      : s === 'partial'
+        ? 'border-amber-400/30 bg-amber-500/12 text-amber-100'
+        : 'border-rose-400/30 bg-rose-500/12 text-rose-200'
+
+  const coverageStats = useMemo(() => {
+    const statuses = links.map(statusForLink)
+    const fully = statuses.filter((s) => s === 'verified').length
+    const partial = statuses.filter((s) => s === 'partial').length
+    const gaps = statuses.filter((s) => s === 'gap').length
+    const total = links.length
+    const coverage = total === 0 ? 0 : Math.round((fully / total) * 100)
+    return { total, fully, partial, gaps, coverage }
+  }, [links, statusForLink])
+
+  const regulations = useMemo(() => {
+    const map = new Map<string, { name: string; sub: string; count: number; status: TraceStatus; firstId: string }>()
+    for (const l of links) {
+      const k = l.regulation
+      const cur = map.get(k)
+      if (cur) {
+        cur.count += 1
+        continue
+      }
+      map.set(k, {
+        name: l.regulation,
+        sub: `${l.standard} · Lane ${l.lane}`,
+        count: 1,
+        status: statusForLink(l),
+        firstId: l.id,
+      })
+    }
+    return Array.from(map.values())
+  }, [links, statusForLink])
+
+  const grouped = useMemo(() => {
+    const classify = (name: string) => {
+      const t = name.toLowerCase()
+      if (t.includes('eu') || t.includes('mdr') || t.includes('ivdr')) return 'EU / MDR'
+      if (t.includes('iso') || t.includes('iec')) return 'ISO / IEC'
+      return 'FDA / US'
+    }
+    const match = (r: { name: string; sub: string }) =>
+      `${r.name} ${r.sub}`.toLowerCase().includes(filter.toLowerCase())
+
+    const buckets: Record<'FDA / US' | 'ISO / IEC' | 'EU / MDR', typeof regulations> = {
+      'FDA / US': [],
+      'ISO / IEC': [],
+      'EU / MDR': [],
+    }
+    for (const r of regulations) {
+      if (!match(r)) continue
+      buckets[classify(r.name) as 'FDA / US' | 'ISO / IEC' | 'EU / MDR'].push(r)
+    }
+    return buckets
+  }, [regulations, filter])
+
+  const stageSpec: Array<{ key: keyof TraceLink; label: string; tone: StageTone }> = [
+    { key: 'regulation', label: 'Regulation', tone: 'indigo' },
+    { key: 'requirement', label: 'Requirement', tone: 'purple' },
+    { key: 'risk', label: 'Risk', tone: 'red' },
+    { key: 'design', label: 'Design', tone: 'cyan' },
+    { key: 'test', label: 'Test', tone: 'green' },
+    { key: 'approval', label: 'Approval', tone: 'amber' },
+    { key: 'artifact', label: 'Artifact', tone: 'violet' },
+  ]
+
+  const toneClass = (tone: StageTone) => {
+    if (tone === 'indigo') return 'border-indigo-400/30 bg-indigo-500/12 text-indigo-200'
+    if (tone === 'purple') return 'border-purple-400/30 bg-purple-500/12 text-purple-200'
+    if (tone === 'red') return 'border-rose-400/30 bg-rose-500/12 text-rose-200'
+    if (tone === 'cyan') return 'border-cyan-400/30 bg-cyan-500/12 text-cyan-200'
+    if (tone === 'green') return 'border-emerald-400/30 bg-emerald-500/12 text-emerald-200'
+    if (tone === 'amber') return 'border-amber-400/30 bg-amber-500/12 text-amber-100'
+    return 'border-violet-400/30 bg-violet-500/12 text-violet-200'
+  }
+
+  const lineColor = selected ? statusForLink(selected) : 'partial'
+  const lineClass =
+    lineColor === 'verified' ? 'bg-emerald-400/50' : lineColor === 'partial' ? 'bg-amber-400/50' : 'bg-rose-400/50'
+
+  const stageCount = (key: keyof TraceLink) => new Set(links.map((l) => String(l[key]))).size
+
+  const selectedStatus = selected ? statusForLink(selected) : 'partial'
+  const selectedStatusLabel = selectedStatus === 'verified' ? 'Fully Traced' : selectedStatus === 'partial' ? 'Partial' : 'Gap'
+
+  const refId = (stageLabel: string, value: string, idx: number) => {
+    if (/^[A-Z]{2,4}-\d+/i.test(value)) return value
+    const prefix =
+      stageLabel === 'Regulation'
+        ? 'REG'
+        : stageLabel === 'Requirement'
+          ? 'REQ'
+          : stageLabel === 'Risk'
+            ? 'RSK'
+            : stageLabel === 'Design'
+              ? 'DES'
+              : stageLabel === 'Test'
+                ? 'TST'
+                : stageLabel === 'Approval'
+                  ? 'APR'
+                  : 'ART'
+    return `${prefix}-${idx + 1}`
+  }
+
+  const sidebarRow = (r: { name: string; sub: string; count: number; status: TraceStatus; firstId: string }) => {
+    const active = selected?.regulation === r.name
+    const dotClass = r.status === 'verified' ? 'bg-emerald-400' : r.status === 'partial' ? 'bg-amber-400' : 'bg-rose-400'
+    return (
+      <button
+        key={r.name}
+        onClick={() => onSelect(r.firstId)}
+        className={clsx(
+          'w-full rounded-lg border border-white/5 bg-slate-900/20 p-2 text-left transition',
+          active ? 'border-l-2 border-l-violet-400 bg-slate-900/40' : 'hover:bg-white/[0.03]'
+        )}
+      >
+        <div className="flex items-start gap-2">
+          <span className={clsx('mt-1 h-2 w-2 rounded-full', dotClass)} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-slate-100">{r.name}</p>
+            <p className="truncate text-xs text-slate-500">{r.sub}</p>
+          </div>
+          <span className="text-[11px] text-slate-400">{r.count} links</span>
+        </div>
+      </button>
+    )
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/45 p-5">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
         <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
       </div>
 
-      <div className="relative grid gap-4 lg:grid-cols-[1.25fr_1fr] lg:items-start">
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Traceability Studio</p>
-          <h3 className="mt-2 text-2xl font-semibold text-slate-100">The proof engine</h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Regulation obligations connect to requirements, risks, design, tests, approvals, and release evidence.
-          </p>
-
-          <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/40 p-2">
-            <svg viewBox="0 0 720 300" className="min-w-[720px]">
-              <defs>
-                <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0" stopColor="rgba(99,102,241,0.6)" />
-                  <stop offset="1" stopColor="rgba(45,212,191,0.55)" />
-                </linearGradient>
-              </defs>
-
-              <line x1="20" y1="150" x2="700" y2="150" stroke="rgba(148,163,184,0.25)" strokeDasharray="5 5" />
-
-              {x.map((xx, idx) => (
-                <g key={xx}>
-                  <circle cx={xx} cy={y} r={22} fill={nodeTone(idx)} />
-                  <circle cx={xx} cy={y} r={10} fill="rgba(226,232,240,0.25)" />
-                </g>
-              ))}
-
-              {['Regulation', 'Requirement', 'Risk', 'Design', 'Test', 'Approval', 'Artifact'].map((t, idx) => (
-                <text key={t} x={x[idx]} y={y + 42} textAnchor="middle" fill="rgba(226,232,240,0.85)" fontSize="11">
-                  {t}
-                </text>
-              ))}
-
-              {links.map((l, idx) => {
-                const yy = 70 + idx * 70
-                const active = l.id === selectedId
-                return (
-                  <g key={l.id} opacity={active ? 1 : 0.95}>
-                    <path
-                      d={`M${x[0]} ${yy} C${x[1] - 20} ${yy} ${x[2] + 20} ${y} ${x[2]} ${y}`}
-                      stroke={active ? 'rgba(99,102,241,0.95)' : 'rgba(148,163,184,0.35)'}
-                      strokeWidth={active ? 3 : 2}
-                      fill="none"
-                    />
-                    <path
-                      d={`M${x[2]} ${y} C${x[3] - 10} ${y} ${x[4] + 10} ${yy} ${x[4]} ${yy}`}
-                      stroke={active ? 'rgba(45,212,191,0.95)' : 'rgba(148,163,184,0.28)'}
-                      strokeWidth={active ? 3 : 2}
-                      fill="none"
-                    />
-
-                    <rect
-                      x={x[0] - 40}
-                      y={yy - 18}
-                      width={120}
-                      height={32}
-                      rx={10}
-                      fill={active ? 'rgba(99,102,241,0.18)' : 'rgba(148,163,184,0.08)'}
-                      stroke={active ? 'rgba(99,102,241,0.55)' : 'rgba(148,163,184,0.22)'}
-                      onClick={() => onSelect(l.id)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                    <text x={x[0] + 20} y={yy + 4} textAnchor="middle" fill={active ? 'rgba(226,232,240,0.95)' : 'rgba(226,232,240,0.75)'} fontSize="10">
-                      Link {idx + 1}
-                    </text>
-                  </g>
-                )
-              })}
-            </svg>
+      <div className="relative space-y-4">
+        {/* TOP: Coverage dashboard bar */}
+        <div className="rounded-2xl border border-white/10 bg-slate-900/35">
+          <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-stretch">
+            <div className="px-4 py-3 border-r border-white/10">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Traceability Studio</p>
+              <h3 className="mt-1 text-2xl font-semibold text-slate-100">The proof engine</h3>
+              <p className="mt-1 text-sm text-slate-400">Every regulation maps to a full chain of evidence.</p>
+            </div>
+            <div className="px-4 py-3 border-r border-white/10">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">Total regulations</p>
+              <p className="mt-1 text-3xl font-semibold text-slate-100">{coverageStats.total}</p>
+            </div>
+            <div className="px-4 py-3 border-r border-white/10">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">Fully traced</p>
+              <p className="mt-1 text-3xl font-semibold text-emerald-300">{coverageStats.fully}</p>
+            </div>
+            <div className="px-4 py-3 border-r border-white/10">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">Partial</p>
+              <p className="mt-1 text-3xl font-semibold text-amber-300">{coverageStats.partial}</p>
+            </div>
+            <div className="px-4 py-3 border-r border-white/10">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">Gaps</p>
+              <p className="mt-1 text-3xl font-semibold text-rose-300">{coverageStats.gaps}</p>
+            </div>
+            <div className="px-4 py-3">
+              <p className="text-[11px] uppercase tracking-wider text-slate-500">Coverage</p>
+              <p className="mt-1 text-3xl font-semibold text-slate-100">{coverageStats.coverage}%</p>
+              <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                <div className="h-1.5 rounded-full bg-violet-400/80" style={{ width: `${coverageStats.coverage}%` }} />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-wider text-slate-500">Selected trace</p>
-              <h4 className="mt-2 text-lg font-semibold text-slate-100">{selected ? selected.regulation : 'Select a relationship link'}</h4>
-            </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-              {selected ? `Lane ${selected.lane}` : '—'}
-            </span>
-          </div>
+        <div className="grid grid-cols-[280px_1fr] gap-4 items-start">
+          {/* LEFT SIDEBAR */}
+          <aside className="rounded-2xl border border-white/10 bg-slate-900/35 p-3">
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Filter regulations..."
+              className="w-full rounded-lg border border-white/10 bg-slate-950/35 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-500"
+            />
 
-          <div className="mt-4 space-y-3 text-sm text-slate-300">
-            <div className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Obligation chain</p>
-              <p className="mt-2">
-                {selected ? `${selected.regulation} → ${selected.requirement}` : '—'}
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Control proof</p>
-              <p className="mt-2">
-                {selected ? `${selected.design} → ${selected.test}` : '—'}
-              </p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-              <p className="text-xs uppercase tracking-wider text-slate-500">Governance and evidence</p>
-              <p className="mt-2">
-                {selected ? `${selected.approval} → ${selected.artifact}` : '—'}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <p className="text-xs uppercase tracking-wider text-slate-500">Links</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {links.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => onSelect(l.id)}
-                  className={`rounded-full border px-3 py-1 text-xs transition ${l.id === selectedId ? 'border-violet-400/50 bg-violet-500/15 text-violet-100' : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'}`}
-                >
-                  {l.id}
-                </button>
+            <div className="mt-3 space-y-4">
+              {(['FDA / US', 'ISO / IEC', 'EU / MDR'] as const).map((group) => (
+                <div key={group}>
+                  <p className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">{group}</p>
+                  <div className="space-y-1.5">
+                    {grouped[group].length > 0 ? grouped[group].map(sidebarRow) : <p className="px-1 text-xs text-slate-600">No regulations</p>}
+                  </div>
+                </div>
               ))}
+            </div>
+          </aside>
+
+          {/* MAIN PANEL */}
+          <div className="space-y-3">
+            {/* CHAIN HEADER */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/35 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="text-xl font-semibold text-slate-100">{selected?.regulation ?? 'Select a regulation'}</h4>
+                  <p className="mt-1 text-sm text-slate-400">
+                    {selected ? `${selected.standard} context with linked requirement, risk controls, and evidence chain.` : 'Select a relationship link to inspect the chain.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-indigo-400/25 bg-indigo-500/12 px-3 py-1 text-xs text-indigo-200">
+                    {selected ? `Lane ${selected.lane}` : 'Lane —'}
+                  </span>
+                  <span className={`rounded-full border px-3 py-1 text-xs ${statusChip(selectedStatus)}`}>{selectedStatusLabel}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* PIPELINE STRIP */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/30 p-3">
+              <div className="flex items-center">
+                {stageSpec.map((s, idx) => (
+                  <div key={s.key} className="flex items-center flex-1 min-w-0">
+                    <div className="w-full text-center">
+                      <span className={`inline-flex rounded-md border px-2 py-1 text-[11px] ${toneClass(s.tone)}`}>{s.label}</span>
+                      <p className="mt-1 text-[11px] text-slate-400">{stageCount(s.key)} items</p>
+                    </div>
+                    {idx < stageSpec.length - 1 && <div className={clsx('mx-1 h-px flex-1', lineClass)} />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CHAIN CARDS */}
+            <div className="relative space-y-3 pl-6">
+              <div className="absolute left-2.5 top-1 bottom-1 w-px bg-white/10" />
+              {selected &&
+                stageSpec.map((s, idx) => {
+                  const value = String(selected[s.key])
+                  const ref = refId(s.label, value, idx)
+                  return (
+                    <div key={s.key} className="relative rounded-2xl border border-white/10 bg-slate-900/35 p-4">
+                      <span className={clsx('absolute -left-6 top-6 h-3 w-3 rounded-full border', toneClass(s.tone))} />
+                      <div className="flex items-start justify-between gap-3">
+                        <span className={clsx('rounded-md border px-2 py-1 text-[11px] uppercase tracking-wider', toneClass(s.tone))}>{s.label}</span>
+                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-slate-300">{ref}</span>
+                      </div>
+                      <h5 className="mt-2 text-lg font-semibold text-slate-100">{value}</h5>
+                      <p className="mt-1 text-sm text-slate-400">
+                        {s.label === 'Regulation'
+                          ? 'Primary obligation anchor for this trace chain.'
+                          : s.label === 'Requirement'
+                            ? 'Controlled requirement linked to regulation intent.'
+                            : s.label === 'Risk'
+                              ? 'Risk control evidence associated to this chain.'
+                              : s.label === 'Design'
+                                ? 'Design control mapping for implementation trace.'
+                                : s.label === 'Test'
+                                  ? 'Verification evidence proving control effectiveness.'
+                                  : s.label === 'Approval'
+                                    ? 'Governance sign-off for controlled release.'
+                                    : 'Final evidence artifact in the trace chain.'}
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5">Lane {selected.lane}</span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5">{selected.phase}</span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5">{selected.standard}</span>
+                      </div>
+                      <div className="mt-3">
+                        <span className={`rounded-full border px-2.5 py-1 text-xs ${statusChip(selectedStatus)}`}>{selectedStatusLabel}</span>
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
           </div>
         </div>
@@ -562,126 +1351,469 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
 }
 
 export function RiskHeatBoard({ hotspots }: { hotspots: ComplianceHotspot[] }) {
-  // A ranked warning board; uses hotspot.rank for ordering.
+  const [modeFilter, setModeFilter] = useState<'All' | 'Process' | 'Governance' | 'Technical' | 'Operations'>('All')
+
+  const scoreByRank: Record<number, number> = {
+    1: 95,
+    2: 88,
+    3: 84,
+    4: 78,
+    5: 74,
+    6: 68,
+    7: 62,
+    8: 54,
+    9: 46,
+    10: 38,
+  }
+
+  const modeByRank: Record<number, 'Process' | 'Governance' | 'Technical' | 'Operations'> = {
+    1: 'Process',
+    2: 'Process',
+    3: 'Governance',
+    4: 'Governance',
+    5: 'Technical',
+    6: 'Technical',
+    7: 'Process',
+    8: 'Governance',
+    9: 'Operations',
+    10: 'Process',
+  }
+
   const ordered = [...hotspots].sort((a, b) => a.rank - b.rank)
-  const severityTone = (rank: number) => (rank <= 3 ? 'rose' : rank <= 7 ? 'amber' : 'slate')
+  const enriched = ordered.map((h) => ({
+    ...h,
+    score: scoreByRank[h.rank] ?? 0,
+    mode: modeByRank[h.rank] ?? 'Process',
+  }))
+  const visible = modeFilter === 'All' ? enriched : enriched.filter((e) => e.mode === modeFilter)
+
+  const severityClass = (rank: number) => {
+    if (rank <= 3) return 'border-rose-400/35 bg-rose-500/12 text-rose-200'
+    if (rank <= 7) return 'border-amber-400/35 bg-amber-500/12 text-amber-100'
+    if (rank <= 9) return 'border-indigo-400/35 bg-indigo-500/12 text-indigo-200'
+    return 'border-slate-400/35 bg-slate-500/12 text-slate-300'
+  }
+
+  const scoreBarClass = (rank: number) => {
+    if (rank <= 3) return 'bg-rose-400'
+    if (rank <= 7) return 'bg-amber-400'
+    if (rank <= 9) return 'bg-indigo-400'
+    return 'bg-slate-400'
+  }
+
+  const modePillClass = (mode: 'Process' | 'Governance' | 'Technical' | 'Operations') => {
+    if (mode === 'Process') return 'border-indigo-400/30 bg-indigo-500/12 text-indigo-200'
+    if (mode === 'Governance') return 'border-amber-400/30 bg-amber-500/12 text-amber-100'
+    if (mode === 'Technical') return 'border-cyan-400/30 bg-cyan-500/12 text-cyan-200'
+    return 'border-violet-400/30 bg-violet-500/12 text-violet-200'
+  }
+
+  const ownerClass = (owner: string) => {
+    if (owner === 'Engineering') return 'border-cyan-400/30 bg-cyan-500/12 text-cyan-200'
+    if (owner === 'Quality') return 'border-emerald-400/30 bg-emerald-500/12 text-emerald-200'
+    if (owner === 'RA' || owner === 'Regulatory Affairs') return 'border-indigo-400/30 bg-indigo-500/12 text-indigo-200'
+    if (owner === 'Business') return 'border-amber-400/30 bg-amber-500/12 text-amber-100'
+    if (owner === 'Security') return 'border-rose-400/30 bg-rose-500/12 text-rose-200'
+    if (owner === 'Ops' || owner === 'Operations') return 'border-violet-400/30 bg-violet-500/12 text-violet-200'
+    return 'border-white/10 bg-white/5 text-slate-300'
+  }
+
+  const criticalCount = enriched.filter((e) => e.rank <= 3).length
+  const highCount = enriched.filter((e) => e.rank >= 4 && e.rank <= 7).length
+  const mediumCount = enriched.filter((e) => e.rank >= 8 && e.rank <= 9).length
+  const processCount = enriched.filter((e) => e.mode === 'Process').length
+  const governanceCount = enriched.filter((e) => e.mode === 'Governance').length
+  const technicalCount = enriched.filter((e) => e.mode === 'Technical').length
+
+  const avgScore = (list: typeof enriched) => {
+    if (list.length === 0) return 0
+    return Math.round(list.reduce((sum, x) => sum + x.score, 0) / list.length)
+  }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/45 p-5">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-rose-500/10 blur-3xl" />
         <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" />
       </div>
 
       <div className="relative">
-        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Compliance Risk Hotspots</p>
-        <h3 className="mt-2 text-2xl font-semibold text-slate-100">A ranked warning board for leadership</h3>
-
-        <div className="mt-6 grid gap-3 lg:grid-cols-2">
-          {ordered.map((r) => {
-            const tone = severityTone(r.rank)
-            const bg =
-              tone === 'rose'
-                ? 'border-rose-400/30 bg-rose-500/10'
-                : tone === 'amber'
-                  ? 'border-amber-400/30 bg-amber-500/10'
-                  : 'border-slate-400/25 bg-slate-400/10'
-            return (
-              <div key={r.rank} className={`rounded-2xl border ${bg} p-4`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Rank {r.rank}</p>
-                    <h4 className="mt-1 text-lg font-semibold text-slate-100">{r.title}</h4>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200">
-                    <div className="flex items-center gap-2">
-                      <TriangleAlert size={14} />
-                      Failure mode
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm text-slate-200">{r.failureMode}</p>
-                <p className="mt-2 text-sm text-slate-300">
-                  <span className="text-slate-400">Why it matters:</span> {r.whyItMatters}
-                </p>
-                <p className="mt-2 text-sm text-slate-300">
-                  <span className="text-slate-400">Consequence:</span> {r.consequence}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {r.impactedFunctions.slice(0, 4).map((f) => (
-                    <span key={f} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">
-                      {f}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Compliance Risk Hotspots</p>
+            <h3 className="mt-2 text-2xl font-semibold text-slate-100">A ranked warning board for leadership</h3>
+            <p className="mt-2 text-sm text-slate-300">
+              Ten failure modes, scored by impact and audit exposure. Each row is a gap with an owner, a consequence, and a mode.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] uppercase tracking-wider text-slate-500">Filter by mode</span>
+            {(['All', 'Process', 'Governance', 'Technical', 'Operations'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setModeFilter(m)}
+                className={clsx(
+                  'rounded-md border px-2.5 py-1 text-xs transition',
+                  modeFilter === m ? 'border-white/20 bg-white/10 text-slate-100' : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20'
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Summary strip */}
+        <div className="mt-5 grid grid-cols-6 rounded-2xl border border-white/10 bg-slate-900/30 overflow-hidden">
+          <div className="border-r border-white/10 px-4 py-3">
+            <p className="text-2xl font-semibold text-rose-300">{criticalCount}</p>
+            <p className="text-xs text-slate-400">Critical (score 80+)</p>
+          </div>
+          <div className="border-r border-white/10 px-4 py-3">
+            <p className="text-2xl font-semibold text-amber-300">{highCount}</p>
+            <p className="text-xs text-slate-400">High (score 60-79)</p>
+          </div>
+          <div className="border-r border-white/10 px-4 py-3">
+            <p className="text-2xl font-semibold text-indigo-300">{mediumCount}</p>
+            <p className="text-xs text-slate-400">Medium (score 40-59)</p>
+          </div>
+          <div className="border-r border-white/10 px-4 py-3">
+            <p className="text-2xl font-semibold text-indigo-300">{processCount}</p>
+            <p className="text-xs text-slate-400">Process gaps</p>
+          </div>
+          <div className="border-r border-white/10 px-4 py-3">
+            <p className="text-2xl font-semibold text-amber-300">{governanceCount}</p>
+            <p className="text-xs text-slate-400">Governance gaps</p>
+          </div>
+          <div className="px-4 py-3">
+            <p className="text-2xl font-semibold text-cyan-300">{technicalCount}</p>
+            <p className="text-xs text-slate-400">Technical gaps</p>
+          </div>
+        </div>
+
+        {/* Ranked table */}
+        <div className="mt-4 overflow-auto rounded-2xl border border-white/10 bg-slate-900/20">
+          <table className="w-full min-w-[1280px] text-left">
+            <thead className="bg-white/[0.02] text-[11px] uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="px-3 py-2">#</th>
+                <th className="px-3 py-2">Score</th>
+                <th className="px-3 py-2">Hotspot</th>
+                <th className="px-3 py-2">Mode</th>
+                <th className="px-3 py-2">Failure & Why It Matters</th>
+                <th className="px-3 py-2">Consequence</th>
+                <th className="px-3 py-2">Owners</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((r) => (
+                <tr key={r.rank} className="border-t border-white/10 transition-colors hover:bg-white/[0.03]">
+                  <td className="px-3 py-2 align-top">
+                    <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-medium ${severityClass(r.rank)}`}>{r.rank}</span>
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    <div className="w-[72px]">
+                      <div className="text-xl font-semibold text-slate-100">{r.score}</div>
+                      <div className="mt-1 h-1.5 w-full rounded-full bg-white/10">
+                        <div className={clsx('h-1.5 rounded-full', scoreBarClass(r.rank))} style={{ width: `${r.score}%` }} />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    <p className="text-sm font-semibold text-slate-100">{r.title}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">{r.failureMode}</p>
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs ${modePillClass(r.mode)}`}>{r.mode}</span>
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    <p className="text-sm text-slate-200">{r.failureMode}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      <span className="text-slate-400">Why it matters:</span> {r.whyItMatters}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2 align-top text-sm text-slate-200">{r.consequence}</td>
+                  <td className="px-3 py-2 align-top">
+                    <div className="flex flex-wrap gap-1.5">
+                      {r.impactedFunctions.map((owner) => (
+                        <span key={`${r.rank}-${owner}`} className={`rounded-md border px-2 py-0.5 text-xs ${ownerClass(owner)}`}>
+                          {owner}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-2 text-xs text-slate-500">
+          Showing {visible.length} of {enriched.length} hotspots · Avg score {avgScore(visible)}
+        </p>
       </div>
     </div>
   )
 }
 
 export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] }) {
-  const domains: GuardrailPattern['domain'][] = ['Compliance Engineering', 'Security by Design', 'AI Guardrails']
-  const orderedPhases = ['Phase 0', 'Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5', 'Phase 6']
+  const trackMeta = [
+    {
+      key: 'Compliance Engineering',
+      color: '#6366f1',
+      subtitle: 'Obligations -> reusable workflows',
+      description:
+        'Turns regulatory obligations (IEC 62304, ISO 14971, 21 CFR Part 11) into reusable engineering patterns. Maps to classification.',
+      chips: ['Starter Kits', 'Obligation Mapping', 'Traceability Automation'],
+    },
+    {
+      key: 'Security by Design',
+      color: '#14b8a6',
+      subtitle: 'Threat controls injected early',
+      description:
+        'Embeds threat modelling, SBOM, secrets scanning, and security verification into CI/CD pipeline stages.',
+      chips: ['Threat Modelling', 'SBOM Generation', 'CI Security Scanning'],
+    },
+    {
+      key: 'AI Guardrails',
+      color: '#a855f7',
+      subtitle: 'AI controls validated & governed',
+      description:
+        'Governs AI-assisted development to ensure outputs are reviewed, validated, and compliant. AI-generated code and outputs treated as human output requiring sign-off.',
+      chips: ['PHI Controls', 'Output Review Gates', 'Audit Logging'],
+    },
+  ] as const
+
+  const controlTypeMeta = {
+    PREVENTIVE: '#ef4444',
+    AUTOMATED: '#3b82f6',
+    'HUMAN APPROVAL': '#f59e0b',
+    DETECTIVE: '#8b5cf6',
+    CORRECTIVE: '#f43f5e',
+  } as const
+
+  const phaseRows = [
+    {
+      id: 'P0',
+      name: 'Intake & Classification',
+      tracks: {
+        'Compliance Engineering': [{ type: 'PREVENTIVE', text: 'Mandatory classification gate before build kickoff' }],
+        'Security by Design': [],
+        'AI Guardrails': [{ type: 'PREVENTIVE', text: 'No PHI in non-approved external AI tools' }],
+      },
+    },
+    {
+      id: 'P1',
+      name: 'Planning & Requirements',
+      tracks: {
+        'Compliance Engineering': [{ type: 'AUTOMATED', text: 'Traceability starter kit provisioned at requirements baseline' }],
+        'Security by Design': [],
+        'AI Guardrails': [
+          { type: 'PREVENTIVE', text: 'No PHI in non-approved external AI tools' },
+          { type: 'HUMAN APPROVAL', text: 'AI-assisted output requires accountable review before approval' },
+        ],
+      },
+    },
+    {
+      id: 'P2',
+      name: 'Architecture & Design',
+      tracks: {
+        'Compliance Engineering': [{ type: 'AUTOMATED', text: 'Traceability starter kit — design linkage pre-wired' }],
+        'Security by Design': [{ type: 'PREVENTIVE', text: 'Threat model required for Lane C/D before design sign-off' }],
+        'AI Guardrails': [{ type: 'HUMAN APPROVAL', text: 'AI-assisted output requires accountable review' }],
+      },
+    },
+    {
+      id: 'P3',
+      name: 'Build & Unit Verification',
+      tracks: {
+        'Compliance Engineering': [{ type: 'AUTOMATED', text: 'Traceability sign-off — IaC linkage auto-generated' }],
+        'Security by Design': [{ type: 'AUTOMATED', text: 'SBOM + dependency + secrets scanning in CI pipeline' }],
+        'AI Guardrails': [{ type: 'HUMAN APPROVAL', text: 'AI-assisted output requires accountable review' }],
+      },
+    },
+    {
+      id: 'P4',
+      name: 'Integration & Validation',
+      tracks: {
+        'Compliance Engineering': [{ type: 'AUTOMATED', text: 'Traceability sign-off — test linkage auto-generated' }],
+        'Security by Design': [{ type: 'DETECTIVE', text: 'Security verification evidence bundle assembled for design' }],
+        'AI Guardrails': [{ type: 'HUMAN APPROVAL', text: 'AI-assisted output requires accountable review' }],
+      },
+    },
+    {
+      id: 'P5',
+      name: 'Release & Deployment',
+      tracks: {
+        'Compliance Engineering': [{ type: 'HUMAN APPROVAL', text: 'Release conditions audit — pre-approval compliance check' }],
+        'Security by Design': [{ type: 'HUMAN APPROVAL', text: 'Final security sign-off required before Lane C/D go-live' }],
+        'AI Guardrails': [{ type: 'DETECTIVE', text: 'AI model decision context logged' }],
+      },
+    },
+    {
+      id: 'P6',
+      name: 'Post-Market & Operations',
+      tracks: {
+        'Compliance Engineering': [{ type: 'DETECTIVE', text: 'Automated compliance monitoring — drift alerts' }],
+        'Security by Design': [],
+        'AI Guardrails': [{ type: 'CORRECTIVE', text: 'AI model decision control context + human override controls' }],
+      },
+    },
+  ] as const
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-0 top-10 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute right-0 top-0 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 p-6 shadow-[0_22px_80px_rgba(8,12,24,0.55)]" style={{ backgroundColor: '#0b0f1a' }}>
+      <div className="pointer-events-none absolute inset-0 opacity-80">
+        <div className="absolute -left-10 top-8 h-72 w-72 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.15)' }} />
+        <div className="absolute right-0 top-0 h-72 w-72 rounded-full blur-3xl" style={{ background: 'rgba(168,85,247,0.12)' }} />
       </div>
 
-      <p className="relative text-xs uppercase tracking-[0.2em] text-slate-400">Guardrails & Paved Roads</p>
-      <h3 className="relative mt-2 text-2xl font-semibold text-slate-100">Reusable controls injected into delivery</h3>
-      <p className="relative mt-2 text-sm text-slate-300">
-        Three execution tracks. Each track adds repeatable, evidence-aware controls aligned to lifecycle phases.
-      </p>
+      <div className="relative">
+        <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Guardrails & Paved Roads</p>
 
-      <div className="relative mt-6 grid gap-4 lg:grid-cols-3">
-        {domains.map((d) => {
-          const items = patterns.filter((p) => p.domain === d)
-          const tone = d === 'Compliance Engineering' ? 'emerald' : d === 'Security by Design' ? 'blue' : 'violet'
-          return (
-            <div key={d} className="rounded-2xl border border-white/10 bg-slate-900/50 p-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-lg font-semibold text-slate-100">{d}</h4>
-                <Chip text={`${items.length} patterns`} tone={tone} />
+        {/* 1. Hero section */}
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1.2fr_1fr_1fr]">
+          <div>
+            <h3 className="text-4xl font-semibold leading-tight tracking-tight text-white">Compliance built into delivery — not bolted on</h3>
+            <p className="mt-3 text-sm text-slate-300">
+              Three execution tracks inject reusable, evidence-aware controls across every lifecycle phase.
+              These controls prevent avoidable violations, speed delivery, and produce audit-ready proof as delivery work happens.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-indigo-400/30 bg-indigo-500/12 px-3 py-1 text-xs text-indigo-200">
+                3 execution tracks
+              </span>
+              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-200">
+                7 lifecycle phases
+              </span>
+              <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs text-violet-200">
+                {patterns.length} control patterns
+              </span>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" style={{ backgroundColor: '#131929' }}>
+            <p className="text-xs uppercase tracking-wider text-slate-400">Why this matters</p>
+            <div className="mt-3 space-y-3 text-sm text-slate-300">
+              <div className="flex items-start gap-2">
+                <Rocket size={15} className="mt-0.5 text-indigo-300" />
+                <p><span className="font-medium text-slate-100">Paved Roads -&gt; Velocity:</span> Pre-approved templates, starter kits, and workflows eliminate rework.</p>
               </div>
-              <div className="mt-4 space-y-3">
-                {orderedPhases.map((ph) => {
-                  const matches = items.filter((p) => p.lifecyclePhases.includes(ph))
-                  const label = ph.replace('Phase ', 'P')
-                  return (
-                    <div key={ph} className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="text-xs uppercase tracking-wider text-slate-500">{label}</span>
-                        {matches.length > 0 ? (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300">{matches.length} control{matches.length === 1 ? '' : 's'}</span>
-                        ) : (
-                          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-400">—</span>
-                        )}
-                      </div>
-                      {matches.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {matches.slice(0, 2).map((m) => (
-                            <div key={m.id} className="text-sm text-slate-200">
-                              <span className="text-xs uppercase tracking-wider text-slate-500">{m.controlType}</span>
-                              <div className="mt-1">{m.title}</div>
-                            </div>
-                          ))}
-                          {matches.length > 2 && <p className="text-xs text-slate-400">+{matches.length - 2} more</p>}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
+              <div className="flex items-start gap-2">
+                <ShieldCheck size={15} className="mt-0.5 text-teal-300" />
+                <p><span className="font-medium text-slate-100">Guardrails -&gt; Risk Reduction:</span> Preventive and automated controls stop violations before release. Detective controls surface issues early.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckSquare size={15} className="mt-0.5 text-violet-300" />
+                <p><span className="font-medium text-slate-100">Evidence by Default:</span> Controls generate audit-ready evidence as a byproduct of delivery.</p>
               </div>
             </div>
-          )
-        })}
+          </div>
+
+          <div className="rounded-2xl border border-indigo-400/25 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" style={{ backgroundColor: '#131929' }}>
+            <p className="text-xs uppercase tracking-wider text-indigo-200">Operating principle</p>
+            <div className="mt-3 space-y-3 text-sm text-slate-300">
+              <p>
+                <span className="font-medium text-slate-100">Controls are infrastructure:</span> Each track is a set of engineering patterns. They plug into the SDLC automatically or with defined human checkpoints.
+              </p>
+              <p>
+                <span className="font-medium text-slate-100">Reusable across all lanes:</span> Lane A uses a subset. Lane D uses all. Same pattern library scales.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Legend strip */}
+        <div className="mt-5 rounded-2xl border border-white/10 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.28)]" style={{ backgroundColor: '#131929' }}>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-slate-400">Execution tracks</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {trackMeta.map((t) => (
+                  <span key={t.key} className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs" style={{ borderColor: `${t.color}66`, color: t.color, backgroundColor: `${t.color}12` }}>
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
+                    {t.key}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-wider text-slate-400">Control types</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+                {(Object.keys(controlTypeMeta) as Array<keyof typeof controlTypeMeta>).map((k) => (
+                  <span key={k} className="inline-flex items-center gap-2 text-xs text-slate-300">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: controlTypeMeta[k] }} />
+                    {k}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Phase x Track matrix */}
+        <div className="mt-5 overflow-auto rounded-2xl border border-white/10 shadow-[0_10px_34px_rgba(0,0,0,0.28)]" style={{ backgroundColor: '#131929' }}>
+          <table className="w-full min-w-[1120px] text-left">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/[0.02]">
+                <th className="px-4 py-3 text-xs uppercase tracking-wider text-slate-400">Phase</th>
+                {trackMeta.map((t) => (
+                  <th key={t.key} className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: t.color }} />
+                      <p className="text-sm font-semibold text-slate-100">{t.key}</p>
+                    </div>
+                    <p className="mt-0.5 text-xs text-slate-500">{t.subtitle}</p>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {phaseRows.map((row, idx) => (
+                <tr key={row.id} className="align-top border-b border-white/10 last:border-b-0" style={{ backgroundColor: idx % 2 === 0 ? '#131929' : '#0f1626' }}>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex rounded-md border border-indigo-400/30 bg-indigo-500/12 px-2 py-0.5 font-mono text-xs text-indigo-200">{row.id}</span>
+                    <p className="mt-1 text-sm font-medium text-slate-100">{row.name}</p>
+                  </td>
+                  {trackMeta.map((t) => {
+                    const controls = row.tracks[t.key]
+                    return (
+                      <td key={`${row.id}-${t.key}`} className="px-4 py-3">
+                        {controls.length === 0 ? (
+                          <span className="text-sm text-slate-500">—</span>
+                        ) : (
+                          <div className="space-y-2">
+                            {controls.map((c, i) => (
+                              <div
+                                key={`${row.id}-${t.key}-${i}`}
+                                className="rounded-lg border border-white/10 p-2.5 transition-all duration-150 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-[0_8px_24px_rgba(0,0,0,0.32)]"
+                                style={{ backgroundColor: '#0b0f1a' }}
+                              >
+                                <span
+                                  className="inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                                  style={{
+                                    borderColor: `${controlTypeMeta[c.type as keyof typeof controlTypeMeta]}66`,
+                                    color: controlTypeMeta[c.type as keyof typeof controlTypeMeta],
+                                    backgroundColor: `${controlTypeMeta[c.type as keyof typeof controlTypeMeta]}14`,
+                                  }}
+                                >
+                                  {c.type}
+                                </span>
+                                <p className="mt-1.5 text-sm text-slate-200">{c.text}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   )
@@ -694,7 +1826,7 @@ export function ClassificationDecisionMap({ dimensions }: { dimensions: Classifi
   const cy = 165
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-4">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
         <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
@@ -702,13 +1834,13 @@ export function ClassificationDecisionMap({ dimensions }: { dimensions: Classifi
 
       <div className="relative">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Classification Model</p>
-        <h3 className="mt-2 text-2xl font-semibold text-slate-100">Turn intended use into lane-routed lifecycle rigor</h3>
-        <p className="mt-2 text-sm text-slate-300">
+        <h3 className="mt-1 text-lg font-semibold text-slate-100">Turn intended use into lane-routed lifecycle rigor</h3>
+        <p className="mt-1 text-[12px] text-slate-300">
           Eight assessment dimensions determine regulatory applicability, evidence expectations, approval intensity, and the SDLC lane.
         </p>
 
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/40 p-2">
-          <svg viewBox="0 0 520 330" className="min-w-[520px]">
+        <div className="mt-3 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 p-2">
+          <svg viewBox="0 0 520 330" className="h-[160px] w-full" preserveAspectRatio="xMidYMid meet">
             <circle cx={cx} cy={cy} r={110} fill="rgba(99,102,241,0.06)" stroke="rgba(148,163,184,0.18)" />
             <circle cx={cx} cy={cy} r={150} fill="none" stroke="rgba(148,163,184,0.10)" strokeDasharray="4 6" />
 

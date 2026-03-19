@@ -1,0 +1,589 @@
+import { useMemo, useEffect, useState } from 'react'
+import { Card, SectionTitle } from '../ui'
+
+type Risk = 'na' | 'low' | 'medium' | 'high'
+
+type AssessmentOption = {
+  label: string
+  sub: string
+  risk: Risk
+}
+
+type AssessmentDimension = {
+  id: string
+  title: string
+  question: string
+  options: AssessmentOption[]
+}
+
+const DIMENSIONS: AssessmentDimension[] = [
+  {
+    id: 'CD-1',
+    title: 'Intended Use',
+    question: 'Is this software intended to diagnose, treat, cure, mitigate, or prevent a disease or condition?',
+    options: [
+      { label: 'Clinical decision support', sub: 'Directly informs clinical decisions', risk: 'high' },
+      { label: 'Administrative / operational', sub: 'Scheduling, billing, workflow', risk: 'low' },
+      { label: 'Developer / engineering tool', sub: 'Code, infrastructure, internal tooling', risk: 'na' },
+      { label: 'Research only', sub: 'Not used in production care', risk: 'low' },
+    ],
+  },
+  {
+    id: 'CD-2',
+    title: 'Regulated Output Impact',
+    question: 'Does the software output directly drive or influence a regulated decision?',
+    options: [
+      { label: 'Drives clinical action', sub: 'Output triggers treatment or diagnosis', risk: 'high' },
+      { label: 'Informs clinician', sub: 'Clinician makes the final call', risk: 'medium' },
+      { label: 'No clinical output', sub: 'Operational or administrative only', risk: 'low' },
+      { label: 'Code / data only', sub: 'Output is non-clinical', risk: 'na' },
+    ],
+  },
+  {
+    id: 'CD-3',
+    title: 'Device / Lab / Non-device determination',
+    question: 'Is this software embedded in, controlling, or part of a physical device or lab instrument?',
+    options: [
+      { label: 'Embedded in device', sub: 'Controls or runs on medical hardware', risk: 'high' },
+      { label: 'Standalone, connected to device', sub: "Interfaces with but doesn't control", risk: 'medium' },
+      { label: 'Standalone non-device', sub: 'No hardware dependency', risk: 'low' },
+      { label: 'Not applicable', sub: 'Lab informatics / non-clinical', risk: 'na' },
+    ],
+  },
+  {
+    id: 'CD-4',
+    title: 'Data and Privacy classification',
+    question: 'What category of data does this software process or store?',
+    options: [
+      { label: 'PHI / PII', sub: 'Protected health or personal identity data', risk: 'high' },
+      { label: 'De-identified health data', sub: 'No direct patient identifiers', risk: 'medium' },
+      { label: 'Code / IP only', sub: 'No personal or health data', risk: 'low' },
+      { label: 'No sensitive data', sub: 'Fully anonymised or synthetic', risk: 'na' },
+    ],
+  },
+  {
+    id: 'CD-5',
+    title: 'Cybersecurity Relevance',
+    question: 'Does the software have network connectivity, external APIs, or access to sensitive systems?',
+    options: [
+      { label: 'Internet-connected + sensitive data', sub: 'External exposure with PII/PHI', risk: 'high' },
+      { label: 'Internal network only', sub: 'Behind firewall, no external APIs', risk: 'medium' },
+      { label: 'Air-gapped', sub: 'Fully isolated from networks', risk: 'low' },
+      { label: 'No connectivity', sub: 'Offline, standalone', risk: 'na' },
+    ],
+  },
+  {
+    id: 'CD-6',
+    title: 'Electronic Records / Signatures',
+    question: 'Does this software create or manage records subject to 21 CFR Part 11 or equivalent?',
+    options: [
+      { label: 'Full Part 11 scope', sub: 'Electronic records + signatures required', risk: 'high' },
+      { label: 'Partial (audit trails only)', sub: 'Logging required, no e-sig', risk: 'medium' },
+      { label: 'Not applicable', sub: 'No regulated record obligations', risk: 'na' },
+      { label: 'Under review', sub: 'Applicability not yet determined', risk: 'medium' },
+    ],
+  },
+  {
+    id: 'CD-7',
+    title: 'Market / Geography',
+    question: 'In which markets will this software be distributed or used?',
+    options: [
+      { label: 'US + EU (global)', sub: 'FDA + MDR/IVDR + other bodies', risk: 'high' },
+      { label: 'US only', sub: 'FDA applicability', risk: 'medium' },
+      { label: 'EU only', sub: 'MDR / IVDR applicability', risk: 'medium' },
+      { label: 'Internal / no distribution', sub: 'No market submission required', risk: 'na' },
+    ],
+  },
+  {
+    id: 'CD-8',
+    title: 'Software Safety Class',
+    question: 'What is the consequence of a software failure on patient or user safety?',
+    options: [
+      { label: 'Class C — Serious injury or death', sub: 'IEC 62304 highest rigor', risk: 'high' },
+      { label: 'Class B — Non-serious injury', sub: 'Moderate lifecycle requirements', risk: 'medium' },
+      { label: 'Class A — No injury possible', sub: 'Minimal lifecycle requirements', risk: 'low' },
+      { label: 'Non-medical software', sub: 'IEC 62304 not applicable', risk: 'na' },
+    ],
+  },
+]
+
+const RISK_SCORE: Record<Risk, number> = { na: 0, low: 1, medium: 2, high: 3 }
+
+const RISK_LABEL: Record<Risk, string> = { na: 'N/A', low: 'Low', medium: 'Medium', high: 'High' }
+
+function riskPillClass(risk: Risk) {
+  switch (risk) {
+    case 'high':
+      return 'bg-rose-500/10 text-rose-200'
+    case 'medium':
+      return 'bg-amber-500/10 text-amber-100'
+    case 'low':
+      return 'bg-emerald-500/10 text-emerald-200'
+    case 'na':
+    default:
+      return 'bg-blue-500/10 text-blue-200'
+  }
+}
+
+function riskLeftBorderClass(risk: Risk) {
+  switch (risk) {
+    case 'high':
+      return 'border-rose-400/35'
+    case 'medium':
+      return 'border-amber-400/35'
+    case 'low':
+      return 'border-emerald-400/35'
+    case 'na':
+    default:
+      return 'border-blue-400/30'
+  }
+}
+
+function lanePillClass(tone: 'rose' | 'amber' | 'emerald' | 'blue') {
+  switch (tone) {
+    case 'rose':
+      return 'bg-rose-500/10 text-rose-200'
+    case 'amber':
+      return 'bg-amber-500/10 text-amber-100'
+    case 'emerald':
+      return 'bg-emerald-500/10 text-emerald-200'
+    case 'blue':
+    default:
+      return 'bg-blue-500/10 text-blue-200'
+  }
+}
+
+function riskColor(risk: Risk) {
+  if (risk === 'high') return { stroke: '#ef4444', fill: 'rgba(239,68,68,0.22)' }
+  if (risk === 'medium') return { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.24)' }
+  if (risk === 'low') return { stroke: '#22c55e', fill: 'rgba(34,197,94,0.18)' }
+  // Neutral/N/A: keep it bright and clinical (yellow) instead of blue.
+  return { stroke: '#f59e0b', fill: 'rgba(245,158,11,0.14)' }
+}
+
+function computeLane(maxScore: number, avgScore: number) {
+  // Simple mapping into your framework's 4 lanes.
+  if (maxScore === 3 || avgScore > 2) return { id: 'D', label: 'Regulated', subtitle: 'Lane D', tone: 'rose' as const }
+  if (maxScore === 2 || avgScore > 1) return { id: 'C', label: 'Enhanced', subtitle: 'Lane C', tone: 'amber' as const }
+  if (maxScore === 1 || avgScore > 0.5) return { id: 'B', label: 'Standard+', subtitle: 'Lane B', tone: 'emerald' as const }
+  return { id: 'A', label: 'Standard', subtitle: 'Lane A', tone: 'blue' as const }
+}
+
+type Answer = { risk: Risk; label: string; sub: string }
+
+function Radar({
+  values,
+}: {
+  values: number[]
+}) {
+  const [hoveredAxis, setHoveredAxis] = useState<number | null>(null)
+
+  const titleLines = (title: string) => {
+    // Normalize uncommon slash variants, then split into lines.
+    const normalized = title.replace(/[／∕]/g, '/')
+    return normalized.split(/\s*\/\s*/g).filter(Boolean)
+  }
+
+  const W = 300
+  const H = 240
+  const cx = W / 2
+  const cy = H / 2 + 2
+  const r = 85
+  const n = values.length
+
+  const maxValue = 3
+  const points = values.map((v, i) => {
+    const vv = Math.max(0, Math.min(maxValue, v))
+    const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
+    const x = cx + Math.cos(angle) * (r * (vv / maxValue))
+    const y = cy + Math.sin(angle) * (r * (vv / maxValue))
+    return `${x.toFixed(2)},${y.toFixed(2)}`
+  })
+
+  const maxAxis = Math.max(...values)
+  const profileRisk: Risk = maxAxis === 3 ? 'high' : maxAxis === 2 ? 'medium' : maxAxis === 1 ? 'low' : 'na'
+  const c = riskColor(profileRisk)
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/30 p-3">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}>
+        {[0.25, 0.5, 0.75, 1].map((f, idx) => (
+          <polygon
+            key={idx}
+            points={values
+              .map((_, i) => {
+                const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
+                const x = cx + Math.cos(angle) * (r * f)
+                const y = cy + Math.sin(angle) * (r * f)
+                return `${x.toFixed(2)},${y.toFixed(2)}`
+              })
+              .join(' ')}
+            fill="none"
+            stroke="rgba(148,163,184,0.25)"
+            strokeWidth="1"
+          />
+        ))}
+
+        {values.map((_, i) => {
+          const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
+          const x = cx + Math.cos(angle) * r
+          const y = cy + Math.sin(angle) * r
+          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,0.25)" strokeWidth="1" />
+        })}
+
+        <polygon points={points.join(' ')} fill={c.fill} stroke={c.stroke} strokeWidth="2" />
+
+        {values.map((v, i) => {
+          const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
+          const x = cx + Math.cos(angle) * (r * (v / maxValue))
+          const y = cy + Math.sin(angle) * (r * (v / maxValue))
+          return <circle key={i} cx={x} cy={y} r="3.5" fill={c.stroke} />
+        })}
+
+        {/* axis labels */}
+        {DIMENSIONS.map((d, i) => {
+          const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
+          const rawX = cx + Math.cos(angle) * (r + 12)
+          const rawY = cy + Math.sin(angle) * (r + 12)
+
+          // Clamp to avoid clipping on the edges (textAnchor can extend beyond x).
+          const pad = 14
+          const x = Math.max(pad, Math.min(W - pad, rawX))
+          const y = Math.max(pad, Math.min(H - pad, rawY))
+
+          const edgeThreshold = 18
+          const anchor =
+            x <= edgeThreshold ? 'start' : x >= W - edgeThreshold ? 'end' : Math.abs(Math.cos(angle)) < 0.2 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end'
+
+          const lines = titleLines(d.title)
+          const fontSize = 8
+          const lineHeight = fontSize * 1.1
+          const y0 = lines.length > 1 ? y - ((lines.length - 1) / 2) * lineHeight : y
+
+          return (
+            <text
+              key={d.id}
+              x={x}
+              y={y0}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              fontSize={fontSize}
+              fill="rgba(226,232,240,0.85)"
+              style={{ cursor: 'help' }}
+              onMouseEnter={() => setHoveredAxis(i)}
+              onMouseLeave={() => setHoveredAxis(null)}
+            >
+              {lines.map((line, idx) => (
+                <tspan key={`${d.id}-${idx}`} x={x} dy={idx === 0 ? 0 : lineHeight}>
+                  {line}
+                </tspan>
+              ))}
+            </text>
+          )
+        })}
+      </svg>
+
+      {hoveredAxis != null && (
+        <div className="mt-2 rounded-lg border border-white/10 bg-slate-950/20 p-2">
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">
+            {titleLines(DIMENSIONS[hoveredAxis].title).map((line, idx) => (
+              <span key={`${hoveredAxis}-t-${idx}`}>
+                {idx > 0 && <br />}
+                {line}
+              </span>
+            ))}
+          </p>
+          <p className="mt-1 text-[13px] leading-4 text-slate-300">{DIMENSIONS[hoveredAxis].question}</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ClassificationAssessment() {
+  const total = DIMENSIONS.length
+  const [started, setStarted] = useState(true)
+  const [activeIndex, setActiveIndex] = useState<number | null>(null)
+  const [answers, setAnswers] = useState<Record<number, Answer>>({})
+
+  const done = Object.keys(answers).length
+  const pct = (done / total) * 100
+
+  const scoreValues = useMemo(() => {
+    return DIMENSIONS.map((_, i) => (answers[i] ? RISK_SCORE[answers[i].risk] : 0))
+  }, [answers])
+
+  const maxScore = Math.max(...scoreValues)
+  const avgScore = scoreValues.reduce((a, b) => a + b, 0) / total
+  const lane = computeLane(maxScore, avgScore)
+
+  useEffect(() => {
+    if (!started) return
+    if (activeIndex == null) return
+    const el = document.getElementById(`classification-step-${activeIndex}`)
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [activeIndex, started])
+
+  const evidence = useMemo(() => {
+    if (maxScore === 3) {
+      return [
+        'Risk Management File (ISO 14971)',
+        'Software Development Plan',
+        'Validation & Verification Protocol',
+        'Cybersecurity Risk Assessment',
+        'Regulatory Submission Package',
+        'Traceability Matrix',
+        'Post-Market Surveillance Plan',
+      ]
+    }
+    if (maxScore === 2) {
+      return [
+        'Software Development Plan',
+        'Validation Protocol',
+        'Audit Trail Configuration',
+        'Privacy Impact Assessment',
+        'Change Control Process',
+      ]
+    }
+    return ['Basic Software Documentation', 'Internal Testing Record', 'Version Control Log']
+  }, [maxScore])
+
+  const start = () => {
+    setStarted(true)
+    setActiveIndex(0)
+  }
+
+  const selectOption = (dimIndex: number, opt: AssessmentOption) => {
+    setAnswers((cur) => ({ ...cur, [dimIndex]: { risk: opt.risk, label: opt.label, sub: opt.sub } }))
+
+    // auto-advance to the next unanswered dimension
+    const next = (() => {
+      const isAnswered = (i: number) => (i === dimIndex ? true : Boolean(answers[i]))
+      for (let i = dimIndex + 1; i < total; i++) {
+        if (!isAnswered(i)) return i
+      }
+      for (let i = 0; i < dimIndex; i++) {
+        if (!isAnswered(i)) return i
+      }
+      return null
+    })()
+
+    if (next !== null) {
+      window.setTimeout(() => setActiveIndex(next), 250)
+    }
+  }
+
+  const exportPDF = () => window.print()
+
+  return (
+    <div className="space-y-4">
+      <SectionTitle title="Software Classification Assessment" subtitle="Eight assessment dimensions determine regulatory applicability, evidence depth, and SDLC rigor." />
+
+      {!started && (
+        <Card className="bg-gradient-to-br from-violet-500/10 to-slate-950/40">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-violet-300">Client-grade assessment flow</p>
+              <h3 className="mt-2 text-2xl font-semibold text-slate-100">Start with one defensible decision.</h3>
+              <p className="mt-2 text-sm text-slate-400">Your radar profile updates live as each dimension is answered.</p>
+            </div>
+            <button
+              type="button"
+              onClick={start}
+              className="rounded-xl border border-violet-500/40 bg-violet-500/10 px-5 py-3 text-sm font-semibold text-violet-100 hover:border-violet-300/60 transition"
+            >
+              Start Assessment
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {started && (
+        <div className="grid gap-3 lg:grid-cols-[60%_40%] items-start">
+          <div className="space-y-4">
+            <Card className="bg-white/5 backdrop-blur">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="min-w-[180px]">
+                  <p className="text-[13px] text-slate-300">{done} of {total}</p>
+                </div>
+
+                <div className="flex-1 min-w-[220px]">
+                  <div className="h-2 rounded-full bg-white/5">
+                    <div className="h-full rounded-full bg-violet-500" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+
+                <div className="shrink-0">
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${lanePillClass(lane.tone)}`}>
+                    {lane.subtitle}
+                  </span>
+                </div>
+              </div>
+            </Card>
+
+            <div className="space-y-3">
+              {DIMENSIONS.map((d, idx) => {
+                const a = answers[idx]
+                const isActive = activeIndex === idx
+                const isDone = Boolean(a)
+
+                const statusPillClass = isDone ? riskPillClass(a!.risk) : 'bg-white/5 text-slate-300'
+                const leftBorderClass = isActive
+                  ? 'border-violet-400/90'
+                  : isDone
+                    ? riskLeftBorderClass(a!.risk)
+                    : 'border-transparent'
+
+                return (
+                  <div
+                    key={d.id}
+                    id={`classification-step-${idx}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setActiveIndex(idx)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') setActiveIndex(idx)
+                    }}
+                    className={[
+                      'cursor-pointer rounded-2xl border border-white/10 bg-slate-900/25 p-4',
+                      'border-l-2',
+                      leftBorderClass,
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900/50',
+                    ].join(' ')}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider text-slate-500">{d.id}</p>
+                        <p className="mt-1 text-[13px] font-semibold text-slate-100">{d.title}</p>
+                      </div>
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${statusPillClass}`}>
+                        {isDone ? RISK_LABEL[a!.risk] : 'Pending'}
+                      </span>
+                    </div>
+
+                    <div
+                      className="overflow-hidden transition-[max-height] duration-200 ease-out"
+                      style={{ maxHeight: isActive ? 980 : 0 }}
+                      aria-hidden={!isActive}
+                    >
+                      <div className="pt-4">
+                        <p className="text-[13px] text-slate-300 leading-5">{d.question}</p>
+                        <div className="mt-4 space-y-2">
+                          {d.options.map((opt, j) => {
+                            const selected = answers[idx]?.risk === opt.risk
+                            return (
+                              <button
+                                key={j}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  selectOption(idx, opt)
+                                }}
+                                className={[
+                                  'w-full rounded-xl border px-3 py-3 text-left flex items-start gap-3',
+                                  'border-white/10 bg-slate-950/20 hover:border-white/20',
+                                  selected ? 'border-violet-400/40 bg-violet-500/10' : '',
+                                ].join(' ')}
+                              >
+                                <span
+                                  className={[
+                                    'mt-1 h-4 w-4 rounded-full border-2',
+                                    selected ? 'border-violet-300/90 bg-violet-300/20' : 'border-white/20 bg-transparent',
+                                  ].join(' ')}
+                                />
+
+                                <span className="flex-1 min-w-0">
+                                  <span className="block text-[13px] font-semibold text-slate-100">{opt.label}</span>
+                                  <span className="mt-1 block text-[11px] text-slate-400 leading-4">{opt.sub}</span>
+                                </span>
+
+                                {selected && (
+                                  <span className={`ml-auto inline-flex items-center rounded-full px-2 py-1 text-[10px] font-medium ${riskPillClass(opt.risk)}`}>
+                                    {RISK_LABEL[opt.risk]}
+                                  </span>
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-4 sticky top-0">
+            <div>
+              <p className="text-[11px] uppercase tracking-wider text-slate-400">Lane assignment</p>
+              <h3 className="mt-1 text-[13px] font-semibold text-slate-50">{lane.subtitle}</h3>
+            </div>
+
+            <Radar values={scoreValues.map((v) => v)} />
+
+            {done === total && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-slate-400">Assessment summary</p>
+                  <div className="mt-2 overflow-x-auto">
+                    <table className="w-full text-left font-mono text-[11px]">
+                      <thead className="text-slate-500">
+                        <tr>
+                          <th className="py-2 pr-2">Dimension</th>
+                          <th className="py-2 pr-2">Decision</th>
+                          <th className="py-2">Risk</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-slate-200">
+                        {DIMENSIONS.map((d, i) => {
+                          const a = answers[i]
+                          return (
+                            <tr key={d.id} className="border-t border-white/10">
+                              <td className="py-2 pr-2 text-slate-300">{d.id}</td>
+                              <td className="py-2 pr-2 text-slate-100" title={a.sub}>
+                                {a.label}
+                              </td>
+                              <td className="py-2 text-slate-200">{RISK_LABEL[a.risk]}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-slate-400">Required evidence</p>
+                  <ul className="mt-2 space-y-1 text-[13px] text-slate-300">
+                    {evidence.map((e) => (
+                      <li key={e} className="flex items-start gap-2">
+                        <span className="mt-[2px] text-emerald-300/90">✓</span>
+                        <span>{e}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={exportPDF}
+              disabled={done !== total}
+              className={[
+                'w-full rounded-xl border px-4 py-3 text-[13px] font-semibold transition',
+                done === total
+                  ? 'border-violet-500/40 bg-violet-500 text-white hover:bg-violet-400'
+                  : 'border-white/10 bg-transparent text-slate-300 opacity-60 cursor-not-allowed hover:bg-white/5',
+              ].join(' ')}
+            >
+              Export Assessment PDF
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+

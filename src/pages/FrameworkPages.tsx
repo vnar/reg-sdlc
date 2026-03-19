@@ -7,14 +7,10 @@ import {
 import { Badge, Card, SectionTitle, Tooltip } from '../components/ui'
 import {
   ApprovalFlow,
-  BlueprintFlowMap,
-  ClassificationDecisionMap,
   EvidenceVault,
   GovernanceDecisionArchitecture,
   GuardrailsTracks,
-  FrameworkHeroPoster,
   LifecycleSwimlane,
-  RegulatoryOrbitMap,
   RiskHeatBoard,
   SDLCStaircase,
   TraceabilityProofGraph,
@@ -23,7 +19,6 @@ import {
   allUniverseItems,
   approvalStages,
   binders,
-  classificationDimensions,
   complianceHotspots,
   functionalRoles,
   guardrailPatterns,
@@ -34,7 +29,8 @@ import {
   traceLinks,
 } from '../data/frameworkData'
 import type { Category, Regulation, SoftwareImpact } from '../types/framework'
-import { Link } from 'react-router-dom'
+import { FrameworkOverviewLanding } from '../components/framework/FrameworkOverviewLanding'
+import ClassificationAssessment from '../components/framework/ClassificationAssessment'
 
 function softwareImpactAreasFor(item: Regulation): string[] {
   const t = `${item.title} ${item.governingBody} ${item.jurisdiction}`.toLowerCase()
@@ -107,109 +103,13 @@ function softwareImpactAreasFor(item: Regulation): string[] {
 }
 
 export function FrameworkOverviewPage() {
-  const chapters = [
-    { to: '/regulatory-universe', label: 'Regulatory Universe' },
-    { to: '/classification-model', label: 'Classification Model' },
-    { to: '/sdlc-lanes', label: 'SDLC Lanes' },
-    { to: '/lifecycle-architecture', label: 'Lifecycle Architecture' },
-    { to: '/evidence-architecture', label: 'Evidence Architecture' },
-    { to: '/governance-model', label: 'Governance Model' },
-    { to: '/approval-matrix', label: 'Approval Matrix' },
-    { to: '/guardrails-paved-roads', label: 'Guardrails & Paved Roads' },
-    { to: '/traceability-studio', label: 'Traceability Studio' },
-    { to: '/compliance-risk-hotspots', label: 'Compliance Risk Hotspots' },
-  ]
-
-  return (
-    <div className="space-y-6">
-      <FrameworkHeroPoster />
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <RegulatoryOrbitMap items={allUniverseItems} compact />
-        <BlueprintFlowMap />
-      </div>
-
-      <Card className="bg-gradient-to-br from-violet-500/10 to-slate-950/40">
-        <SectionTitle
-          title="The client-grade reading order"
-          subtitle="Follow the story your auditors expect: obligations → decisions → controlled execution → evidence proof."
-        />
-
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          {chapters.map((c, idx) => (
-            <Link
-              key={c.to}
-              to={c.to}
-              className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-4 transition hover:border-white/20 hover:bg-white/5"
-            >
-              <span className="mt-0.5 inline-flex h-7 min-w-7 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold text-slate-200">
-                {idx + 1}
-              </span>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-100">{c.label}</p>
-                <p className="mt-1 text-xs text-slate-400 transition group-hover:text-slate-300">Open chapter</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </Card>
-
-      <Card className="rounded-2xl border-white/10 bg-slate-900/40 p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Outcomes that become true</p>
-            <h2 className="mt-2 text-xl font-semibold text-slate-50">A defensible compliance story you can show.</h2>
-            <p className="mt-3 text-sm text-slate-300">
-              This framework is designed to convert obligations into repeatable delivery controls, then prove those controls through traceable evidence.
-            </p>
-          </div>
-
-          <div className="w-full lg:max-w-[420px]">
-            <div className="space-y-3">
-              {[
-                'Classification decisions with auditable rationale',
-                'Lane-routed execution rigor (design → test → release)',
-                'Evidence binders organized for inspection and review',
-                'Traceability links that connect risk, requirements, and proof',
-              ].map((x) => (
-                <div key={x} className="flex items-start gap-2">
-                  <span className="mt-2 h-2 w-2 rounded-full bg-emerald-400/70" />
-                  <p className="text-sm text-slate-300">{x}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </Card>
-    </div>
-  )
+  return <FrameworkOverviewLanding />
 }
 
 export function GuardrailsPavedRoadsPage() {
   return (
     <div className="space-y-4">
       <GuardrailsTracks patterns={guardrailPatterns} />
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="bg-gradient-to-br from-emerald-500/10 to-slate-950/40">
-          <SectionTitle title="Compliance Engineering" subtitle="Turning obligations into reusable workflows, tooling, and automation." />
-          <div className="space-y-2 text-sm text-slate-300">
-            <p>Reusable artifact templates</p>
-            <p>Traceability starter kits</p>
-            <p>Evidence capture patterns</p>
-            <p>Release readiness workflows</p>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-blue-500/10 to-slate-950/40">
-          <SectionTitle title="Security by Design + AI Guardrails" subtitle="Security and AI controls injected early, validated, and governed." />
-          <div className="space-y-2 text-sm text-slate-300">
-            <p>Threat modeling and verification evidence</p>
-            <p>SBOM + dependency + secrets scanning</p>
-            <p>Accountable review for AI-assisted outputs</p>
-            <p>Revalidation decision controls for model/product changes</p>
-          </div>
-        </Card>
-      </div>
     </div>
   )
 }
@@ -435,30 +335,8 @@ export function RegulatoryUniversePage() {
 export function ClassificationModelPage() {
   return (
     <div className="space-y-4">
-      <ClassificationDecisionMap dimensions={classificationDimensions} />
-
-      <Card className="bg-white/5">
-        <SectionTitle title="Eight assessment dimensions" subtitle="Use the prompts to reach a defensible classification decision" />
-        <div className="grid gap-3 lg:grid-cols-2">
-          {classificationDimensions.map((d) => (
-            <details key={d.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
-              <summary className="cursor-pointer list-none">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">{d.id}</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{d.name}</p>
-                  </div>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">Decision prompt</span>
-                </div>
-              </summary>
-              <div className="mt-3 text-sm text-slate-300">
-                <p className="text-slate-300">{d.description}</p>
-                <p className="mt-2 text-slate-200"><span className="text-slate-400">Prompt:</span> {d.decisionPrompt}</p>
-              </div>
-            </details>
-          ))}
-        </div>
-      </Card>
+      
+      <ClassificationAssessment />
     </div>
   )
 }
@@ -467,33 +345,6 @@ export function SDLCLanesPage() {
   return (
     <div className="space-y-4">
       <SDLCStaircase lanes={lanes} />
-
-      <Card className="bg-white/5">
-        <SectionTitle title="Lane escalation logic" subtitle="Classification determines rigor, evidence depth, and governance intensity" />
-        <div className="grid gap-3 lg:grid-cols-2">
-          {lanes.map((lane) => (
-            <details key={lane.id} className="group rounded-2xl border border-white/10 bg-slate-950/30 p-4">
-              <summary className="cursor-pointer list-none">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Lane {lane.id}</p>
-                    <p className="mt-1 text-lg font-semibold text-slate-100">{lane.subtitle}</p>
-                  </div>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-                    {lane.evidenceDepth}
-                  </span>
-                </div>
-              </summary>
-              <div className="mt-3 space-y-2 text-sm text-slate-300">
-                <p><span className="text-slate-400">Software type:</span> {lane.softwareType}</p>
-                <p><span className="text-slate-400">Examples:</span> {lane.examples.join(', ')}</p>
-                <p><span className="text-slate-400">Triggered by:</span> {lane.triggers.join(', ')}</p>
-                <p><span className="text-slate-400">Controls required:</span> {lane.controlsRequired.join(', ')}</p>
-              </div>
-            </details>
-          ))}
-        </div>
-      </Card>
     </div>
   )
 }
@@ -517,47 +368,88 @@ export function EvidenceArchitecturePage() {
 export function GovernanceModelPage() {
   return (
     <div className="space-y-4">
-      <GovernanceDecisionArchitecture layers={governanceLayers} />
-
-      <Card className="bg-white/5">
-        <SectionTitle title="Functional ownership" subtitle="Who owns what across the operating model" />
-        <div className="grid gap-3 lg:grid-cols-2">
-          {functionalRoles.map((role) => (
-            <div key={role.id} className="rounded-2xl border border-white/10 bg-slate-950/30 p-4">
-              <p className="text-sm font-semibold text-slate-100">{role.role}</p>
-              <p className="mt-2 text-sm text-slate-300">{role.owns.join(', ')}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+      <GovernanceDecisionArchitecture layers={governanceLayers} roles={functionalRoles} />
     </div>
   )
 }
 
 export function ApprovalMatrixPage() {
+  const phaseBadgeClasses = (stage: string) => {
+    if (stage === 'Phase 4' || stage === 'Phase 1-4') return 'border-violet-400/35 bg-violet-500/12 text-violet-200'
+    if (stage === 'Phase 5') return 'border-emerald-400/35 bg-emerald-500/12 text-emerald-200'
+    if (stage === 'Post-Release') return 'border-rose-400/35 bg-rose-500/12 text-rose-200'
+    return 'border-indigo-400/35 bg-indigo-500/12 text-indigo-200'
+  }
+
+  const phaseSubLabel = (stage: string) => {
+    if (stage === 'Phase 0') return 'Phase 0 — Intake & Classification'
+    if (stage === 'Phase 1') return 'Phase 1 — Planning & Requirements'
+    if (stage === 'Phase 2') return 'Phase 2 — Architecture & Design'
+    if (stage === 'Phase 4') return 'Phase 4 — Verification & Validation'
+    if (stage === 'Phase 5') return 'Phase 5 — Release & Deployment'
+    if (stage === 'Phase 1-4') return 'Phase 1-4 — Continuous Risk Management'
+    return 'Post-Release — Change Control'
+  }
+
+  const splitRoleTokens = (s: string) => s.split(/\s*\+\s*/g).filter(Boolean)
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <ApprovalFlow tiers={riskTiers} />
 
-      <Card className="bg-white/5">
+      <Card className="bg-white/5 p-4">
         <SectionTitle title="Stage accountability matrix" subtitle="Who authors, reviews, and approves each governance package" />
-        <div className="overflow-auto rounded-2xl border border-white/10 bg-slate-950/30">
-          <table className="w-full min-w-[980px] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wider text-slate-400">
+        <div className="overflow-auto rounded-2xl border border-white/10 bg-slate-950/35 shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+          <table className="w-full min-w-[980px] text-left text-[13px]">
+            <thead className="text-xs uppercase tracking-wider text-slate-400 bg-white/[0.02]">
               <tr>
-                <th className="px-3 py-2">Stage / Artifact</th>
-                <th className="px-3 py-2">Author</th>
-                <th className="px-3 py-2">Reviewer(s)</th>
-                <th className="px-3 py-2">Approver(s)</th>
+                <th className="px-3 py-2.5">Stage / Artifact</th>
+                <th className="px-3 py-2.5 text-blue-300">Author</th>
+                <th className="px-3 py-2.5 text-violet-300">Reviewer(s)</th>
+                <th className="px-3 py-2.5 text-emerald-300">Approver(s)</th>
               </tr>
             </thead>
             <tbody>
               {approvalStages.map((a) => (
-                <tr key={a.artifactPackage} className="border-t border-white/10">
-                  <td className="px-3 py-2 text-slate-100">{a.stage} - {a.artifactPackage}</td>
-                  <td className="px-3 py-2">{a.author}</td>
-                  <td className="px-3 py-2">{a.reviewers.join(', ')}</td>
-                  <td className="px-3 py-2">{a.approvers.join(', ')}</td>
+                <tr key={a.artifactPackage} className="border-t border-white/10 transition-colors duration-150 hover:bg-white/[0.04]">
+                  <td className="px-3 py-2.5 text-slate-100">
+                    <div className="flex items-start gap-2">
+                      <span className={`mt-0.5 inline-flex rounded-md border px-2 py-0.5 text-[11px] font-medium shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${phaseBadgeClasses(a.stage)}`}>
+                        {a.stage.replace('Phase ', '')}
+                      </span>
+                      <div>
+                        <div className="text-slate-100 font-medium leading-5">{a.artifactPackage}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 leading-4">{phaseSubLabel(a.stage)}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      {splitRoleTokens(a.author).map((role) => (
+                        <span key={`${a.artifactPackage}-author-${role}`} className="rounded-md border border-blue-400/25 bg-blue-500/12 px-2 py-0.5 text-[11px] font-medium text-blue-200">
+                          {role}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      {a.reviewers.map((role) => (
+                        <span key={`${a.artifactPackage}-reviewer-${role}`} className="rounded-md border border-violet-400/25 bg-violet-500/12 px-2 py-0.5 text-[11px] font-medium text-violet-200">
+                          {role}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex flex-wrap gap-1.5">
+                      {a.approvers.map((role) => (
+                        <span key={`${a.artifactPackage}-approver-${role}`} className="rounded-md border border-emerald-400/25 bg-emerald-500/12 px-2 py-0.5 text-[11px] font-medium text-emerald-200">
+                          {role}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
