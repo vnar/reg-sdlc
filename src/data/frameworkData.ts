@@ -1,0 +1,596 @@
+import type {
+  ApprovalStage,
+  Artifact,
+  Binder,
+  ClassificationDimension,
+  ComplianceHotspot,
+  FunctionalRole,
+  GovernanceLayer,
+  Guidance,
+  Lane,
+  License,
+  LifecyclePhase,
+  Regulation,
+  Requirement,
+  Risk,
+  RiskTier,
+  Standard,
+  Test,
+  TraceLink,
+  Certification,
+  ExecutiveProblem,
+  BusinessImpact,
+  GuardrailPattern,
+} from '../types/framework'
+
+function entry(
+  id: string,
+  title: string,
+  category: Regulation['category'],
+  governingBody: string,
+  jurisdiction: string,
+  softwareRelevance: string,
+  softwareImpact: Regulation['softwareImpact'] = 'Moderate'
+): Regulation {
+  return {
+    id,
+    title,
+    category,
+    governingBody,
+    jurisdiction,
+    overview: `${title} establishes obligations for regulated healthcare and software operations.`,
+    scope: 'Applies when software influences regulated decisions, records, or claims in healthcare contexts.',
+    keyRequirements: ['Defined intended use', 'Controlled records', 'Verification evidence'],
+    softwareRelevance,
+    softwareImpact,
+    triggerScenarios: ['Clinical or lab decision support', 'Regulated records', 'Submission-impacting release'],
+    linkedLanes: ['B', 'C', 'D'],
+    linkedPhases: ['Phase 0', 'Phase 1', 'Phase 4', 'Phase 5', 'Phase 6'],
+    linkedArtifacts: ['Classification Assessment', 'SRS', 'Traceability Matrix', 'Validation Summary Report'],
+    softwareTypes: ['Enterprise', 'Lab', 'Device'],
+  }
+}
+
+export const regulations: Regulation[] = [
+  entry('REG-01', 'FD&C Act 201(g)', 'Regulation', 'US FDA', 'United States', '“Drug” means articles recognized in official pharmacopeias and articles intended for use in diagnosis, cure, mitigation, treatment, or prevention of disease, articles intended to affect the structure or any function of the body (other than food), and articles intended for use as a component of any such article.', 'Moderate'),
+  entry('REG-02', 'FD&C Act 201(h)', 'Regulation', 'US FDA', 'United States', '“Device” means an instrument, apparatus, implement, machine, contrivance, implant, in vitro reagent, or other similar article intended for use in diagnosis or treatment of disease or affecting the structure or function of the body, which achieves its primary intended purposes without chemical action or metabolic dependence.', 'High'),
+  entry('REG-03', '21 CFR Part 807', 'Regulation', 'US FDA', 'United States', '21 CFR Part 807 requires establishments involved in the manufacture, preparation, propagation, compounding, assembly, or processing of devices intended for commercial distribution in the United States to register annually with FDA and submit device listing information.', 'High'),
+  entry('REG-04', '21 CFR Part 807 Subpart E', 'Regulation', 'US FDA', 'United States', 'A 510(k) is a premarket submission made to FDA to demonstrate that the device to be marketed is as safe and effective, that is, substantially equivalent, to a legally marketed device.', 'High'),
+  entry('REG-05', '21 CFR Part 814', 'Regulation', 'US FDA', 'United States', '21 CFR Part 814 establishes the FDA process of scientific and regulatory review to evaluate the safety and effectiveness of Class III medical devices.', 'High'),
+  entry('REG-06', '21 CFR Part 812', 'Regulation', 'US FDA', 'United States', 'An Investigational Device Exemption (IDE) under 21 CFR Part 812 is a regulatory approval that permits a device to be shipped lawfully for the purpose of conducting clinical investigations without complying with other requirements that would normally apply to devices in commercial distribution.', 'High'),
+  entry('REG-07', '21 CFR Part 820', 'Regulation', 'US FDA', 'United States', '21 CFR Part 820 is a quality system (CGMP) regulation for finished medical devices, setting requirements for the methods, facilities, and controls used for design, manufacture, packaging, labeling, storage, installation, and servicing to ensure safety and effectiveness.', 'High'),
+  entry('REG-08', '21 CFR Part 801', 'Regulation', 'US FDA', 'United States', '21 CFR Part 801 establishes general labeling requirements for medical devices, including minimum requirements such as manufacturer identification, adequate directions for use, prevention of misleading statements, and prominence of required label statements.', 'High'),
+  entry('REG-09', '21 CFR Part 803', 'Regulation', 'US FDA', 'United States', '21 CFR Part 803 (Medical Device Reporting) establishes mandatory requirements for manufacturers, importers, and device user facilities to report certain device-related adverse events and product problems to FDA.', 'High'),
+  entry('REG-10', 'Section 520(o)', 'Regulation', 'US FDA', 'United States', 'Under 21 U.S.C. 360j(o), the term “device” does not include certain software functions that are not intended to acquire or analyze medical images, IVD signals, or physiological patterns; are intended to display, analyze, or print medical information about a patient; are intended to support or provide recommendations to healthcare professionals about prevention, diagnosis, or treatment; and are intended to enable healthcare professionals to independently review the basis of those recommendations.', 'High'),
+  entry('REG-11', 'Section 524B', 'Regulation', 'US FDA', 'United States', '21 U.S.C. 360n-2 requires sponsors of cyber devices to include a postmarket monitoring plan for cybersecurity vulnerabilities, design processes to ensure cybersecurity with postmarket updates and patches, and a software bill of materials listing commercial and open-source components, along with other FDA-required cybersecurity information.', 'High'),
+  entry('REG-12', '42 CFR Part 493', 'Regulation', 'CMS / CLIA', 'United States', '42 CFR Part 493 establishes uniform quality standards and certification requirements for all clinical laboratories that examine human specimens for the diagnosis, prevention, or treatment of disease or health assessment.', 'High'),
+  entry('REG-13', '21 CFR Part 11', 'Regulation', 'US FDA', 'United States', '21 CFR Part 11 sets forth the criteria under which FDA considers electronic records, electronic signatures, and handwritten signatures executed to electronic records to be trustworthy, reliable, and generally equivalent to paper records and handwritten signatures executed on paper.', 'High'),
+  entry('REG-14', '21 CFR Part 860', 'Regulation', 'US FDA', 'United States', '21 CFR Part 860 establishes the procedures and criteria for classifying medical devices into one of three regulatory control classes (Class I, II, or III) based on the level of control necessary to provide reasonable assurance of safety and effectiveness.', 'High'),
+  entry('REG-15', 'EU GDPR', 'Regulation', 'European Union', 'European Union', 'The General Data Protection Regulation (GDPR) is an EU regulation that protects personal data and privacy by establishing rules for how organizations must lawfully process, secure, and transfer personal data.', 'High'),
+  entry('REG-16', 'EU IVDR 2017/746', 'Regulation', 'European Union', 'European Union', 'Regulation (EU) 2017/746 (IVDR) is an EU regulation on placing on the market and putting into service of in vitro diagnostic (IVD) medical devices that introduces stricter oversight, a risk-based classification system, and enhanced post-market surveillance requirements.', 'High'),
+  entry('REG-17', 'PMDA Regulation', 'Regulation', 'PMDA/MHLW', 'Japan', 'The PMDA defines Software as a Medical Device (SaMD) as software with an intended medical use that has significant potential risk to a patient’s or user’s life and health when not functioning as intended, regulated under Japan’s PMD Act.', 'High'),
+  entry('REG-18', 'FDA Regulation (General)', 'Regulation', 'US FDA', 'United States', 'FDA regulates medical devices sold in the United States to assure their safety and effectiveness using a risk-based classification approach with regulatory controls increasing as risk level increases.', 'High'),
+  entry('REG-19', 'HIPAA', 'Regulation', 'HHS OCR', 'United States', 'HIPAA is a U.S. federal law that protects the privacy and security of individuals’ medical information and sets national standards for how health plans, providers, and insurers handle and share protected health data.', 'High'),
+]
+
+export const standards: Standard[] = [
+  entry('STD-01', 'ISO 15189', 'Standard', 'ISO', 'Global', 'Lab quality standard affecting software used in laboratory quality and reporting.', 'High') as Standard,
+  entry('STD-02', 'ISO 13485', 'Standard', 'ISO', 'Global', 'QMS standard requiring controlled software lifecycle and document governance.', 'High') as Standard,
+  entry('STD-03', 'ISO 14971', 'Standard', 'ISO', 'Global', 'Risk management lifecycle for hazards, controls, and residual risk decisions.', 'High') as Standard,
+  entry('STD-04', 'IEC 62304', 'Standard', 'IEC', 'Global', 'Core medical device software lifecycle standard and safety class expectations.', 'High') as Standard,
+  entry('STD-05', 'GAMP 5', 'Standard', 'ISPE', 'Global', 'Risk-based validation for regulated computerized systems.', 'High') as Standard,
+  entry('STD-06', 'ISO/IEC 27001', 'Standard', 'ISO/IEC', 'Global', 'Information security management controls in software development and operations.') as Standard,
+  entry('STD-07', 'IEC 62366-1', 'Standard', 'IEC', 'Global', 'Usability engineering controls for safe and effective software interaction.') as Standard,
+  entry('STD-08', 'IEC 81001-5-1', 'Standard', 'IEC', 'Global', 'Health software cybersecurity lifecycle expectations and security assurance.') as Standard,
+]
+
+export const guidanceDocs: Guidance[] = [
+  entry('GDN-01', 'FDA Design Control Guidance (1997)', 'Guidance', 'US FDA', 'United States', 'Interprets practical design control implementation for regulated software.', 'Moderate') as Guidance,
+  entry('GDN-02', 'FDA Multiple Function Device Products Guidance (2020)', 'Guidance', 'US FDA', 'United States', 'Explains regulated/unregulated boundary management in multifunction software products.', 'Moderate') as Guidance,
+  entry('GDN-03', 'EU GMP Annex 11', 'Guidance', 'European Commission', 'European Union', 'Computerized system validation and operational controls for GxP contexts.', 'Moderate') as Guidance,
+]
+
+export const certifications: Certification[] = [
+  entry('CRT-01', 'CLIA Certificate', 'Certification', 'CMS', 'United States', 'Required for clinical laboratory operations where software supports reportable workflow.', 'Moderate') as Certification,
+  entry('CRT-02', 'CAP Certificate', 'Certification', 'CAP', 'United States', 'Accreditation expectations that reinforce quality controls and evidence discipline.', 'Moderate') as Certification,
+  entry('CRT-03', 'SSAE 18 SOC 2', 'Certification', 'AICPA', 'United States / Global', 'Assurance framework for security, availability, and confidentiality controls.', 'Foundational') as Certification,
+]
+
+export const licenses: License[] = [
+  entry('LIC-01', 'NYSDOH Permit', 'License', 'New York State DOH', 'New York', 'State laboratory operations and software-controlled process expectations.', 'Moderate') as License,
+  entry('LIC-02', 'California DPH License', 'License', 'California DPH', 'California', 'Operational licensing expectations for healthcare laboratory software environments.', 'Moderate') as License,
+  entry('LIC-03', 'Maryland DOH License', 'License', 'Maryland DOH', 'Maryland', 'State oversight requiring controlled software and process evidence.', 'Moderate') as License,
+  entry('LIC-04', 'Massachusetts DPH License', 'License', 'Massachusetts DPH', 'Massachusetts', 'License controls requiring auditable operations and software support controls.', 'Moderate') as License,
+  entry('LIC-05', 'Pennsylvania DPH License', 'License', 'Pennsylvania DPH', 'Pennsylvania', 'State quality obligations influencing software governance practices.', 'Moderate') as License,
+  entry('LIC-06', 'Rhode Island DOH License', 'License', 'Rhode Island DOH', 'Rhode Island', 'State-level controls requiring evidence of software-supported quality operations.', 'Moderate') as License,
+  entry('LIC-07', 'Washington DC Health License', 'License', 'DC Health', 'District of Columbia', 'Licensing expectations for controlled operations and software lifecycle accountability.', 'Moderate') as License,
+]
+
+export const allUniverseItems = [...regulations, ...standards, ...guidanceDocs, ...certifications, ...licenses]
+
+export const classificationDimensions: ClassificationDimension[] = [
+  { id: 'CD-1', name: 'Intended use', description: 'Core claim and user context.', decisionPrompt: 'What explicit intended use statement is being made?' },
+  { id: 'CD-2', name: 'Regulated output impact', description: 'Clinical/lab consequence of outputs.', decisionPrompt: 'Can this software output influence a regulated decision?' },
+  { id: 'CD-3', name: 'Device / lab / non-device determination', description: 'Regulatory category boundary.', decisionPrompt: 'Is it device software, lab-impacting software, or enterprise support?' },
+  { id: 'CD-4', name: 'Data and privacy classification', description: 'PHI/PII and sensitive data handling.', decisionPrompt: 'What protected data classes are processed or stored?' },
+  { id: 'CD-5', name: 'Cybersecurity relevance', description: 'Threat exposure and secure design obligation.', decisionPrompt: 'What is the threat profile and attack surface?' },
+  { id: 'CD-6', name: 'Electronic records / signatures', description: 'Part 11 / Annex 11 applicability.', decisionPrompt: 'Are regulated records/signatures created, altered, or retained?' },
+  { id: 'CD-7', name: 'Market / geography', description: 'Jurisdictional obligations by deployment region.', decisionPrompt: 'Which markets trigger additional obligations?' },
+  { id: 'CD-8', name: 'Software safety class', description: 'Risk class driving lifecycle rigor.', decisionPrompt: 'What safety impact class applies if failure occurs?' },
+]
+
+export const lanes: Lane[] = [
+  {
+    id: 'A',
+    name: 'Lane A',
+    subtitle: 'Non-Regulated Enterprise',
+    softwareType: 'Internal productivity and enterprise support software',
+    examples: ['Internal analytics dashboards', 'Workflow productivity tooling'],
+    triggers: ['No regulated output impact', 'No device claim'],
+    controlsRequired: ['Baseline SDLC', 'Security baseline', 'Operational monitoring'],
+    lifecycleRigor: 'Foundational',
+    evidenceDepth: 'Lightweight',
+    approvalIntensity: 'Engineering + System owner',
+    ownersApprovers: ['Engineering', 'System Owner', 'Security'],
+  },
+  {
+    id: 'B',
+    name: 'Lane B',
+    subtitle: 'GxP / Regulated Support',
+    softwareType: 'Support systems in regulated operations',
+    examples: ['GxP reporting support', 'Controlled data management'],
+    triggers: ['Regulated records', 'Quality support process'],
+    controlsRequired: ['Validation planning', 'Change control', 'Document control'],
+    lifecycleRigor: 'Controlled',
+    evidenceDepth: 'Moderate',
+    approvalIntensity: 'Engineering + QA + RA',
+    ownersApprovers: ['Engineering', 'Quality', 'Regulatory Affairs', 'System Owner'],
+  },
+  {
+    id: 'C',
+    name: 'Lane C',
+    subtitle: 'Lab Workflow Impacting',
+    softwareType: 'Lab workflow and reportability-impacting systems',
+    examples: ['Lab result reporting workflow', 'Instrument integration middleware'],
+    triggers: ['CLIA/CAP workflow impact', 'Reportability or patient-impacting sequence'],
+    controlsRequired: ['Formal traceability', 'Risk controls', 'V&V protocol suite'],
+    lifecycleRigor: 'High',
+    evidenceDepth: 'Comprehensive',
+    approvalIntensity: 'Cross-functional governance',
+    ownersApprovers: ['Engineering', 'Lab SMEs', 'Quality', 'Regulatory Affairs'],
+  },
+  {
+    id: 'D',
+    name: 'Lane D',
+    subtitle: 'Medical Device Software / SaMD',
+    softwareType: 'Software that is itself a device function or SaMD',
+    examples: ['AI diagnostic platform', 'Clinical decision support SaMD'],
+    triggers: ['Medical claim', 'Clinical performance responsibility'],
+    controlsRequired: ['Design controls', 'Clinical-grade validation', 'Post-market surveillance'],
+    lifecycleRigor: 'Maximum',
+    evidenceDepth: 'Submission-grade',
+    approvalIntensity: 'Formal governance and release authorization',
+    ownersApprovers: ['Engineering', 'Quality', 'Regulatory Affairs', 'Clinical', 'System Owner'],
+  },
+]
+
+export const lifecyclePhases: LifecyclePhase[] = [
+  {
+    id: 0,
+    name: 'Phase 0: Intake & Classification',
+    purpose: 'Determine applicability, intended use, and lane assignment.',
+    activities: ['Classify software', 'Assess obligations', 'Define intended use'],
+    outputs: ['Classification Assessment', 'Regulatory Applicability Matrix'],
+    approvers: ['Business', 'Quality', 'Regulatory Affairs'],
+    exitCriteria: ['Lane selected', 'Applicability approved'],
+  },
+  {
+    id: 1,
+    name: 'Phase 1: Planning & Requirements',
+    purpose: 'Translate intended use into controlled requirements.',
+    activities: ['Capture user needs', 'Define SRS', 'Plan risk strategy'],
+    outputs: ['User Needs', 'SRS', 'Risk Management Plan'],
+    approvers: ['Product', 'Quality'],
+    exitCriteria: ['Requirements baseline approved'],
+  },
+  {
+    id: 2,
+    name: 'Phase 2: Architecture & Design',
+    purpose: 'Establish design control and security-by-design.',
+    activities: ['Architecture design', 'Threat modeling', 'Interface definition'],
+    outputs: ['Architecture Document', 'Threat Model', 'ICDs'],
+    approvers: ['Engineering', 'Security', 'Quality'],
+    exitCriteria: ['Design review complete'],
+  },
+  {
+    id: 3,
+    name: 'Phase 3: Build & Unit Verification',
+    purpose: 'Implement controlled code and verify component behavior.',
+    activities: ['Build', 'Unit testing', 'Code review'],
+    outputs: ['Build records', 'Unit verification records'],
+    approvers: ['Engineering lead'],
+    exitCriteria: ['Unit verification pass'],
+  },
+  {
+    id: 4,
+    name: 'Phase 4: Verification & Validation',
+    purpose: 'Demonstrate intended use and risk control effectiveness.',
+    activities: ['Execute protocols', 'System testing', 'Trace closure'],
+    outputs: ['Test reports', 'Traceability Matrix', 'Validation Summary Report'],
+    approvers: ['Quality', 'Regulatory Affairs'],
+    exitCriteria: ['Validation acceptance'],
+  },
+  {
+    id: 5,
+    name: 'Phase 5: Release & Deployment',
+    purpose: 'Authorize controlled production release.',
+    activities: ['Release review', 'Change board decision', 'Deployment control'],
+    outputs: ['Release authorization', 'Deployment evidence'],
+    approvers: ['CCB', 'System Owner', 'Quality'],
+    exitCriteria: ['Production authorization signed'],
+  },
+  {
+    id: 6,
+    name: 'Phase 6: Post-Market Operations',
+    purpose: 'Maintain compliance through operation, surveillance, and change.',
+    activities: ['Periodic review', 'Incident/CAPA handling', 'MDR assessment'],
+    outputs: ['Periodic Review Report', 'CAPA records', 'MDR assessments'],
+    approvers: ['Post-Market Quality Review'],
+    exitCriteria: ['Residual risk accepted and tracked'],
+  },
+]
+
+export const binders: Binder[] = [
+  {
+    id: 1,
+    name: 'Binder 1: Governance',
+    purpose: 'Defines policies, responsibilities, and control framework.',
+    contents: ['Classification Assessment', 'Regulatory Applicability Matrix', 'Standards Matrix', 'RACI', 'SDP', 'Change Control SOP', 'Validation SOP', 'Cybersecurity SOP', 'Document Control SOP', 'CAPA SOP', 'Training Matrix'],
+    associatedLanes: ['A', 'B', 'C', 'D'],
+    lifecyclePhases: ['Phase 0', 'Phase 1', 'Phase 5', 'Phase 6'],
+    auditValue: 'Demonstrates management control and accountable governance.',
+  },
+  {
+    id: 2,
+    name: 'Binder 2: Design Inputs',
+    purpose: 'Captures intended use, needs, and requirements.',
+    contents: ['Intended Use Statement', 'User Needs', 'System Requirements', 'SRS', 'Interface/Data Requirements', 'Risk Management Plan', 'Traceability Strategy'],
+    associatedLanes: ['B', 'C', 'D'],
+    lifecyclePhases: ['Phase 1'],
+    auditValue: 'Proves clear, controlled design input baseline.',
+  },
+  {
+    id: 3,
+    name: 'Binder 3: Design Outputs',
+    purpose: 'Captures architecture and technical realization outputs.',
+    contents: ['Software Architecture Document', 'Detailed Design Specs', 'Interface Control Documents', 'Threat Model', 'Data Flow Diagrams', 'SOUP/OSS Assessment', 'Audit Trail Design', 'SBOM'],
+    associatedLanes: ['B', 'C', 'D'],
+    lifecyclePhases: ['Phase 2', 'Phase 3'],
+    auditValue: 'Demonstrates controlled design realization and security intent.',
+  },
+  {
+    id: 4,
+    name: 'Binder 4: Verification & Validation',
+    purpose: 'Provides objective evidence that software meets intended use.',
+    contents: ['Test Protocols', 'Test Scripts', 'Test Execution Records', 'Integration Test Report', 'System Test Report', 'Security Test Report', 'Traceability Matrix', 'Validation Summary Report'],
+    associatedLanes: ['C', 'D'],
+    lifecyclePhases: ['Phase 4'],
+    auditValue: 'Core submission-grade proof of conformity and effectiveness.',
+  },
+  {
+    id: 5,
+    name: 'Binder 5: Release & Operations',
+    purpose: 'Demonstrates controlled release and post-market operation.',
+    contents: ['Change Control Records', 'Release Authorization', 'Deployment Evidence', 'Release Notes', 'Incident Records', 'CAPA Records', 'Periodic Review Report', 'MDR Assessments', 'Decommissioning Plan'],
+    associatedLanes: ['B', 'C', 'D'],
+    lifecyclePhases: ['Phase 5', 'Phase 6'],
+    auditValue: 'Shows accountable release and sustained compliance after go-live.',
+  },
+]
+
+export const governanceLayers: GovernanceLayer[] = [
+  {
+    id: 'GL-1',
+    name: 'Delivery Governance',
+    members: ['Product', 'Engineering', 'System Owner'],
+    purpose: 'Manage delivery scope and execution readiness.',
+    decisionRights: ['Prioritization', 'Delivery scope', 'Readiness to proceed'],
+    approves: ['Phase plan', 'Requirements baseline'],
+    escalationTo: 'Compliance & Design Review',
+  },
+  {
+    id: 'GL-2',
+    name: 'Compliance & Design Review',
+    members: ['Quality', 'Regulatory Affairs', 'Security', 'Engineering'],
+    purpose: 'Ensure design and controls satisfy obligations.',
+    decisionRights: ['Design control acceptability', 'Regulatory interpretation'],
+    approves: ['Design package', 'Risk package'],
+    escalationTo: 'Change Control Board',
+  },
+  {
+    id: 'GL-3',
+    name: 'Change Control Board',
+    members: ['Quality', 'System Owner', 'Regulatory Affairs', 'Operations'],
+    purpose: 'Authorize releases and production-impacting changes.',
+    decisionRights: ['Change tier', 'Release authorization'],
+    approves: ['Validation package', 'Release package', 'Major production change'],
+    escalationTo: 'Post-Market Quality Review',
+  },
+  {
+    id: 'GL-4',
+    name: 'Post-Market Quality Review',
+    members: ['Quality', 'Regulatory Affairs', 'Clinical/Lab SMEs', 'Operations'],
+    purpose: 'Monitor post-release risk and compliance performance.',
+    decisionRights: ['Periodic review actions', 'CAPA escalation'],
+    approves: ['Post-market risk actions', 'Periodic review report'],
+    escalationTo: 'Executive Quality Council',
+  },
+]
+
+export const functionalRoles: FunctionalRole[] = [
+  { id: 'FR-1', role: 'Product / Business', owns: ['Intended use definition', 'Market claims', 'Priority alignment'] },
+  { id: 'FR-2', role: 'Engineering', owns: ['Architecture', 'Implementation', 'Design outputs'] },
+  { id: 'FR-3', role: 'Quality / Compliance', owns: ['QMS controls', 'Validation governance', 'Release quality gates'] },
+  { id: 'FR-4', role: 'Regulatory Affairs', owns: ['Regulatory interpretation', 'Submission strategy', 'Labeling/claims alignment'] },
+  { id: 'FR-5', role: 'Security / Privacy', owns: ['Threat modeling', 'Data protection controls', 'Cybersecurity assurance'] },
+  { id: 'FR-6', role: 'System Owner', owns: ['Production accountability', 'Operational authorization', 'Lifecycle stewardship'] },
+  { id: 'FR-7', role: 'Operations / DevOps', owns: ['Deployment controls', 'Monitoring', 'Operational evidence'] },
+  { id: 'FR-8', role: 'Clinical / Lab SMEs', owns: ['Workflow suitability', 'Clinical/lab safety context', 'Risk acceptance input'] },
+]
+
+export const approvalStages: ApprovalStage[] = [
+  { stage: 'Phase 0', artifactPackage: 'Classification Package', author: 'Business + RA', reviewers: ['Quality', 'Security'], approvers: ['Regulatory Affairs', 'Quality'] },
+  { stage: 'Phase 1', artifactPackage: 'Requirements Package', author: 'Product + Engineering', reviewers: ['Quality'], approvers: ['Product Owner', 'Quality'] },
+  { stage: 'Phase 2', artifactPackage: 'Design Package', author: 'Engineering', reviewers: ['Security', 'Quality'], approvers: ['Engineering Lead', 'Quality'] },
+  { stage: 'Phase 1-4', artifactPackage: 'Risk Package', author: 'Quality + Engineering', reviewers: ['Clinical/Lab SME'], approvers: ['Quality', 'Regulatory Affairs'] },
+  { stage: 'Phase 4', artifactPackage: 'Validation Package', author: 'Validation Lead', reviewers: ['Engineering', 'Security'], approvers: ['Quality', 'Regulatory Affairs'] },
+  { stage: 'Phase 5', artifactPackage: 'Release Package', author: 'Engineering + Ops', reviewers: ['Quality'], approvers: ['CCB', 'System Owner'] },
+  { stage: 'Post-Release', artifactPackage: 'Major Production Change', author: 'Change Owner', reviewers: ['Quality', 'RA', 'Security'], approvers: ['CCB', 'System Owner', 'RA'] },
+]
+
+export const riskTiers: RiskTier[] = [
+  { id: 'RT-1', name: 'Routine / Low Risk', description: 'No intended use change, low compliance impact.', requiredApprovers: ['Engineering Lead', 'System Owner'], governancePath: 'Delivery Governance -> Release' },
+  { id: 'RT-2', name: 'Moderate / Regulated', description: 'Regulated process impact with bounded risk.', requiredApprovers: ['Quality', 'Regulatory Affairs', 'System Owner'], governancePath: 'Compliance & Design Review -> CCB' },
+  { id: 'RT-3', name: 'Major / Claims-Affecting', description: 'Potential claim/performance impact requiring expanded evidence.', requiredApprovers: ['Quality Head', 'Regulatory Affairs Lead', 'System Owner', 'Clinical/Lab SME'], governancePath: 'Compliance & Design Review -> CCB -> Post-Market Quality Review' },
+]
+
+export const artifacts: Artifact[] = [
+  { id: 'AR-1', name: 'Software Applicability & Classification Assessment', binder: 'Binder 1', phase: 'Phase 0', laneApplicability: ['A', 'B', 'C', 'D'], author: 'Business + RA', reviewers: ['Quality'], approvers: ['Regulatory Affairs'] },
+  { id: 'AR-2', name: 'SRS', binder: 'Binder 2', phase: 'Phase 1', laneApplicability: ['B', 'C', 'D'], author: 'Engineering', reviewers: ['Quality'], approvers: ['Engineering Lead', 'Quality'] },
+  { id: 'AR-3', name: 'Threat Model', binder: 'Binder 3', phase: 'Phase 2', laneApplicability: ['B', 'C', 'D'], author: 'Security', reviewers: ['Engineering'], approvers: ['Security Lead'] },
+  { id: 'AR-4', name: 'Traceability Matrix', binder: 'Binder 4', phase: 'Phase 4', laneApplicability: ['C', 'D'], author: 'Validation Lead', reviewers: ['Engineering', 'Quality'], approvers: ['Quality'] },
+  { id: 'AR-5', name: 'Release Authorization', binder: 'Binder 5', phase: 'Phase 5', laneApplicability: ['B', 'C', 'D'], author: 'Ops', reviewers: ['Quality'], approvers: ['CCB', 'System Owner'] },
+]
+
+export const requirements: Requirement[] = [
+  { id: 'REQ-1', name: 'System shall retain audit trail events for regulated records.', lane: 'C' },
+  { id: 'REQ-2', name: 'System shall enforce role-based release authorization.', lane: 'D' },
+  { id: 'REQ-3', name: 'System shall maintain intended use traceability to verification.', lane: 'D' },
+]
+
+export const risks: Risk[] = [
+  { id: 'RSK-1', name: 'Untraceable requirement to test gap', severity: 'High' },
+  { id: 'RSK-2', name: 'Unauthorized change to regulated output logic', severity: 'High' },
+  { id: 'RSK-3', name: 'Incomplete audit trail design', severity: 'Moderate' },
+]
+
+export const tests: Test[] = [
+  { id: 'TST-1', name: 'Audit trail integrity verification', type: 'System Test' },
+  { id: 'TST-2', name: 'Release authorization workflow test', type: 'Validation Test' },
+  { id: 'TST-3', name: 'Traceability completeness test', type: 'Process Validation' },
+]
+
+export const traceLinks: TraceLink[] = [
+  {
+    id: 'TL-1',
+    regulation: '21 CFR Part 11',
+    standard: 'GAMP 5',
+    lane: 'C',
+    phase: 'Phase 4',
+    requirement: 'REQ-1',
+    risk: 'RSK-3',
+    design: 'Audit Trail Design',
+    test: 'TST-1',
+    approval: 'Quality',
+    artifact: 'Traceability Matrix',
+  },
+  {
+    id: 'TL-2',
+    regulation: 'EU IVDR 2017/746',
+    standard: 'IEC 62304',
+    lane: 'D',
+    phase: 'Phase 5',
+    requirement: 'REQ-2',
+    risk: 'RSK-2',
+    design: 'Release control architecture',
+    test: 'TST-2',
+    approval: 'CCB',
+    artifact: 'Release Authorization',
+  },
+  {
+    id: 'TL-3',
+    regulation: '21 CFR Part 820',
+    standard: 'ISO 14971',
+    lane: 'D',
+    phase: 'Phase 4',
+    requirement: 'REQ-3',
+    risk: 'RSK-1',
+    design: 'Traceability strategy',
+    test: 'TST-3',
+    approval: 'Regulatory Affairs',
+    artifact: 'Validation Summary Report',
+  },
+]
+
+export const frameworkFlow = [
+  'Regulatory Scope',
+  'Software Classification',
+  'SDLC Lane',
+  'Lifecycle',
+  'Artifacts',
+  'Governance',
+  'Approvals',
+  'Traceability',
+]
+
+export const executiveProblems: ExecutiveProblem[] = [
+  {
+    id: 1,
+    title: 'Regulatory -> Engineering Disconnect',
+    description: 'Regulations are interpreted in legal language while engineering executes in delivery frameworks.',
+    result: 'Misinterpretation, gaps, and avoidable rework.',
+  },
+  {
+    id: 2,
+    title: 'One-Size-Fits-All or No Process',
+    description: 'Low-risk software is overburdened while high-risk systems are under-controlled.',
+    result: 'Inefficiency plus regulatory exposure.',
+  },
+  {
+    id: 3,
+    title: 'Weak Traceability',
+    description: 'Requirements are not consistently linked to risks, design, tests, and approvals.',
+    result: 'Failed audits and weak submission defensibility.',
+  },
+  {
+    id: 4,
+    title: 'Late Compliance Discovery',
+    description: 'Compliance is handled at release, audit, or submission time instead of by design.',
+    result: 'Release delays, expensive remediation, and blocked revenue.',
+  },
+  {
+    id: 5,
+    title: 'Governance Ambiguity',
+    description: 'Ownership and approval accountability are unclear across functions.',
+    result: 'Shadow decisions and inconsistent quality.',
+  },
+  {
+    id: 6,
+    title: 'Change Risk Blindness',
+    description: 'Post-release changes are not consistently assessed for regulatory and validation impact.',
+    result: 'Hidden compliance debt and safety risk.',
+  },
+]
+
+export const businessImpacts: BusinessImpact[] = [
+  {
+    title: 'Financial Impact',
+    points: [
+      'Delayed launches and blocked commercialization windows',
+      'Revalidation and remediation cost',
+      'Submission delays that defer revenue',
+    ],
+  },
+  {
+    title: 'Regulatory Risk',
+    points: [
+      'FDA 483 observations and warning letter exposure',
+      'CAP/CLIA deficiencies and GDPR/HIPAA violations',
+      'Potential field corrections or recalls',
+    ],
+  },
+  {
+    title: 'Operational Inefficiency',
+    points: [
+      'Duplicate documentation effort',
+      'Under-controlled high-risk systems',
+      'Over-engineered low-risk systems',
+    ],
+  },
+  {
+    title: 'Strategic Risk',
+    points: [
+      'Inability to scale a regulated software portfolio',
+      'Slower innovation for AI/ML and SaMD products',
+      'Reduced competitiveness in regulated markets',
+    ],
+  },
+]
+
+export const guardrailPatterns: GuardrailPattern[] = [
+  {
+    id: 'GP-1',
+    domain: 'Compliance Engineering',
+    title: 'Mandatory classification gate before build',
+    controlType: 'Preventive',
+    lifecyclePhases: ['Phase 0'],
+    implementation: 'Project cannot start development until classification package is approved.',
+  },
+  {
+    id: 'GP-2',
+    domain: 'Compliance Engineering',
+    title: 'Traceability starter kit',
+    controlType: 'Automated',
+    lifecyclePhases: ['Phase 1', 'Phase 2', 'Phase 4'],
+    implementation: 'Template IDs and link rules automatically connect requirements, risk, design, and test records.',
+  },
+  {
+    id: 'GP-3',
+    domain: 'Compliance Engineering',
+    title: 'Release readiness evidence gate',
+    controlType: 'Human Approval',
+    lifecyclePhases: ['Phase 5'],
+    implementation: 'Release package requires artifact completeness and required signatures before deployment.',
+  },
+  {
+    id: 'GP-4',
+    domain: 'Security by Design',
+    title: 'Threat model required for Lane C/D',
+    controlType: 'Preventive',
+    lifecyclePhases: ['Phase 2'],
+    implementation: 'Design review checklist enforces threat model presence and mitigation traceability.',
+  },
+  {
+    id: 'GP-5',
+    domain: 'Security by Design',
+    title: 'SBOM + dependency scanning in CI',
+    controlType: 'Automated',
+    lifecyclePhases: ['Phase 3', 'Phase 5'],
+    implementation: 'Pipelines generate SBOM and fail policy-violating dependency checks.',
+  },
+  {
+    id: 'GP-6',
+    domain: 'Security by Design',
+    title: 'Security verification evidence bundle',
+    controlType: 'Detective',
+    lifecyclePhases: ['Phase 4'],
+    implementation: 'Security tests and vulnerability findings are captured into validation evidence package.',
+  },
+  {
+    id: 'GP-7',
+    domain: 'AI Guardrails',
+    title: 'AI-assisted output requires accountable review',
+    controlType: 'Human Approval',
+    lifecyclePhases: ['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'],
+    implementation: 'AI-generated requirements, tests, or code cannot be accepted without owner review signoff.',
+  },
+  {
+    id: 'GP-8',
+    domain: 'AI Guardrails',
+    title: 'No PHI in non-approved external AI tools',
+    controlType: 'Preventive',
+    lifecyclePhases: ['Phase 0', 'Phase 1', 'Phase 6'],
+    implementation: 'Policy controls and training restrict data exposure in unauthorized AI services.',
+  },
+  {
+    id: 'GP-9',
+    domain: 'AI Guardrails',
+    title: 'Model-change revalidation decision control',
+    controlType: 'Corrective',
+    lifecyclePhases: ['Phase 6'],
+    implementation: 'Model updates trigger formal impact assessment for revalidation and governance escalation.',
+  },
+]
+
+export const complianceHotspots: ComplianceHotspot[] = [
+  { rank: 1, title: 'No formal classification step', failureMode: 'Projects launch without applicability decision.', whyItMatters: 'Misclassification creates control gaps from day one.', consequence: 'Non-conforming releases and audit findings.', impactedFunctions: ['Business', 'Quality', 'Regulatory Affairs'] },
+  { rank: 2, title: 'One SDLC for all software', failureMode: 'Uniform process ignores software risk profiles.', whyItMatters: 'High-risk software needs higher rigor and evidence.', consequence: 'Insufficient controls for regulated software.', impactedFunctions: ['Engineering', 'Quality'] },
+  { rank: 3, title: 'Engineering self-certifying regulated release', failureMode: 'No independent quality/regulatory approval.', whyItMatters: 'Release authorization requires governance separation.', consequence: 'Unauthorized production changes.', impactedFunctions: ['Engineering', 'Quality', 'System Owner'] },
+  { rank: 4, title: 'Missing Intended Use artifact', failureMode: 'Intended use remains implicit and unstable.', whyItMatters: 'It anchors classification, verification, and claims.', consequence: 'Traceability and claim defensibility collapse.', impactedFunctions: ['Business', 'Regulatory Affairs'] },
+  { rank: 5, title: 'Weak or absent traceability', failureMode: 'Requirements, risk, design, and tests are disconnected.', whyItMatters: 'Traceability is core proof of control effectiveness.', consequence: 'Validation not defensible in audits/submissions.', impactedFunctions: ['Engineering', 'Quality'] },
+  { rank: 6, title: 'Cybersecurity as an afterthought', failureMode: 'Security design starts late.', whyItMatters: 'Healthcare software threat posture must be proactive.', consequence: 'Residual risk and remediation burden increase.', impactedFunctions: ['Security', 'Engineering'] },
+  { rank: 7, title: 'UAT treated as validation', failureMode: 'Operational testing mistaken for formal validation.', whyItMatters: 'Validation must demonstrate intended use and risk controls.', consequence: 'False confidence and compliance exposure.', impactedFunctions: ['Business', 'Quality'] },
+  { rank: 8, title: 'No change impact assessment', failureMode: 'Changes bypass risk-tier evaluation.', whyItMatters: 'Change risk determines approval path and revalidation.', consequence: 'Uncontrolled drift in production behavior.', impactedFunctions: ['Engineering', 'Quality', 'RA'] },
+  { rank: 9, title: 'No periodic review after go-live', failureMode: 'Post-market governance is absent.', whyItMatters: 'Operational compliance requires ongoing surveillance.', consequence: 'Undetected quality and safety trends.', impactedFunctions: ['Operations', 'Quality'] },
+  { rank: 10, title: 'Lab and device software mixed under vague controls', failureMode: 'Different risk classes share ambiguous processes.', whyItMatters: 'Lane-specific rigor is essential for compliance.', consequence: 'Evidence mismatch and governance confusion.', impactedFunctions: ['Engineering', 'Quality', 'Lab/Clinical SMEs'] },
+]
