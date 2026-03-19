@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ShieldCheck, Route, Layers, Network, Binary } from 'lucide-react'
+import { ShieldCheck, Route, Layers, Network, Binary, ChevronDown } from 'lucide-react'
 import ProblemSolutionOutcomesBlueprint from './ProblemSolutionOutcomesBlueprint'
 
 function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
@@ -30,216 +30,269 @@ type PillarKey = 'classification' | 'sdlc' | 'governance' | 'traceability'
 type Pillar = {
   key: PillarKey
   title: string
-  tagline: string
-  tone: 'teal' | 'gold' | 'violet' | 'rose'
+  subtitle: string
   icon: React.ReactNode
-  oneLiner: string
-  what: string
-  why: string
-  how: string
-  expandChips: string[]
+  linkTo: string
+  linkLabel: string
 }
 
 const PILLARS: Pillar[] = [
+  { key: 'classification', title: 'Classification', subtitle: 'Intended use -> lane rigor', icon: <Binary className="h-5 w-5 text-[#14b8a6]" strokeWidth={2.25} />, linkTo: '/classification-model', linkLabel: 'View Classification Model ->' },
+  { key: 'sdlc', title: 'SDLC Lanes', subtitle: 'Risk-calibrated rigor', icon: <Route className="h-5 w-5 text-[#3b82f6]" strokeWidth={2.25} />, linkTo: '/sdlc-lanes', linkLabel: 'View SDLC Lanes ->' },
+  { key: 'governance', title: 'Governance', subtitle: 'Layered accountability', icon: <Layers className="h-5 w-5 text-[#a855f7]" strokeWidth={2.25} />, linkTo: '/governance-model', linkLabel: 'View Governance Model ->' },
+  { key: 'traceability', title: 'Traceability', subtitle: 'Proof from regulation to release', icon: <Network className="h-5 w-5 text-[#fb7185]" strokeWidth={2.25} />, linkTo: '/traceability-studio', linkLabel: 'View Traceability Studio ->' },
+]
+
+type Chapter = {
+  num: string
+  title: string
+  subtitle: string
+  description: string
+  tags: string[]
+  outputs: string[]
+  to: string
+}
+
+type Persona = {
+  key: string
+  role: string
+  tagline: string
+  color: string
+  pain: string
+  gets: string[]
+  chips: string[]
+}
+
+const CHAPTERS_BY_TRACK: Array<{
+  id: string
+  label: string
+  badgeTone: 'understand' | 'execute' | 'prove'
+  description: string
+  chapters: Chapter[]
+}> = [
   {
-    key: 'classification',
-    title: 'Classification',
-    tagline: 'Intended use → lane rigor',
-    tone: 'teal',
-    icon: <Binary className="h-6 w-6 text-[#0b9ec4]" strokeWidth={2.25} />,
-    oneLiner: 'One decision that routes the entire rigor of delivery.',
-    what: 'What it is: map intended use and impact into regulated applicability context.',
-    why: 'Why it matters: wrong classification leads to evidence gaps or over-building.',
-    how: 'How it works: prompts guide a defensible decision tied to downstream lifecycle gates.',
-    expandChips: ['Applies', 'Routes rigor', 'Defines evidence depth', 'Lane-ready rationale'],
+    id: 'track-understand',
+    label: 'Understand',
+    badgeTone: 'understand',
+    description: "What you're operating in",
+    chapters: [
+      {
+        num: '01',
+        title: 'Regulatory Universe',
+        subtitle: 'Map obligations by jurisdiction and context',
+        description:
+          'A structured inventory of every regulatory obligation that can apply to your software — by jurisdiction, product type, and context.',
+        tags: ['IEC 62304', 'ISO 14971', '21 CFR Part 11', 'EU MDR', 'GAMP 5'],
+        outputs: ['Obligation register by standard', 'Applicability matrix per product', 'Standard ↔ framework element mapping'],
+        to: '/regulatory-universe',
+      },
+      {
+        num: '02',
+        title: 'Classification Model',
+        subtitle: '8-dimension decision that routes everything downstream',
+        description:
+          "An 8-dimension assessment that determines the software's regulatory classification, IEC 62304 safety class, and SDLC lane. Everything downstream is conditional on this outcome.",
+        tags: ['CD-1 to CD-8', 'Safety Class A/B/C', 'Lane Assignment'],
+        outputs: ['Classification record (signed)', 'SDLC lane assignment', 'Evidence depth requirement'],
+        to: '/classification-model',
+      },
+      {
+        num: '03',
+        title: 'SDLC Lanes',
+        subtitle: 'Four lanes define control intensity and evidence depth',
+        description:
+          'Four lanes (A through D) defining process intensity, required controls, and evidence depth for each class of software.',
+        tags: ['Lane A through D'],
+        outputs: ['Lane-specific phase gates', 'Required controls per phase', 'Evidence binder requirements'],
+        to: '/sdlc-lanes',
+      },
+    ],
   },
   {
-    key: 'sdlc',
-    title: 'SDLC Lanes',
-    tagline: 'Risk-calibrated rigor',
-    tone: 'gold',
-    icon: <Route className="h-6 w-6 text-[#f59e0b]" strokeWidth={2.25} />,
-    oneLiner: 'Risk level determines the process intensity and evidence depth.',
-    what: 'What it is: four lanes from internal tools to high-risk SaMD.',
-    why: 'Why it matters: it prevents under-validated delivery for high impact.',
-    how: 'How it works: each lane expands traceable controls across phases 0–6.',
-    expandChips: ['Regulatory burden', 'Evidence depth', 'Governance weight', 'Phase outputs'],
+    id: 'track-execute',
+    label: 'Execute',
+    badgeTone: 'execute',
+    description: 'How you build and govern',
+    chapters: [
+      {
+        num: '04',
+        title: 'Lifecycle Architecture',
+        subtitle: 'Phase gates and accountable progression model',
+        description:
+          'Seven phases P0–P6 from intake through post-market. Each phase has defined entry criteria, required activities, artifacts, and a signed gate before progression.',
+        tags: ['P0–P6'],
+        outputs: ['Gate checklist per phase', 'Artifact list per phase', 'RACI by phase + lane'],
+        to: '/lifecycle-architecture',
+      },
+      {
+        num: '05',
+        title: 'Evidence Architecture',
+        subtitle: '43 documents organized into 5 evidence binders',
+        description:
+          '43 evidence documents organized into 5 binders. Each tagged to a phase, gate, lane applicability, and standard requirement.',
+        tags: ['43 Documents', '5 Binders', 'Core/Lane/Regulated tags'],
+        outputs: ['Binder 1 Planning & Classification', 'Binder 2 Design & Architecture', 'Binder 3–5 Testing, Ops, Post-Market'],
+        to: '/evidence-architecture',
+      },
+      {
+        num: '06',
+        title: 'Governance Model',
+        subtitle: 'Decision layers, triggers, quorum, and escalation',
+        description:
+          'Four governance layers from sprint-level delivery controls to post-market quality review. Each layer has defined triggers, quorum, decision rights, and escalation paths.',
+        tags: ['L1–L4'],
+        outputs: ['Layer-specific triggers', 'Quorum and decision rights', 'Escalation path by layer'],
+        to: '/governance-model',
+      },
+      {
+        num: '07',
+        title: 'Approval Matrix',
+        subtitle: 'Role-based approvals by artifact, lane, and layer',
+        description:
+          'A structured matrix of approval requirements by artifact type, lane, and governance layer.',
+        tags: ['Role-based approvals', 'Escalation rules', 'Lane-conditional'],
+        outputs: ['Approval matrix by artifact', 'Escalation path green→amber→red', 'Role ↔ governance layer mapping'],
+        to: '/approval-matrix',
+      },
+      {
+        num: '08',
+        title: 'Guardrails & Paved Roads',
+        subtitle: 'Reusable controls inherited across delivery tracks',
+        description:
+          "Three execution tracks inject reusable controls across all seven phases. Teams inherit compliance — they don't reinvent it per project.",
+        tags: ['Compliance Engineering', 'Security by Design', 'AI Guardrails'],
+        outputs: ['Phase × track control matrix', 'Preventive/automated/human/detective', 'Starter kits per track'],
+        to: '/guardrails-paved-roads',
+      },
+    ],
   },
   {
-    key: 'governance',
-    title: 'Governance',
-    tagline: 'Layered accountability',
-    tone: 'violet',
-    icon: <Layers className="h-6 w-6 text-[#a855f7]" strokeWidth={2.25} />,
-    oneLiner: 'Decision rights are explicit, so approvals become predictable.',
-    what: 'What it is: a 4-layer decision structure for governed release routing.',
-    why: 'Why it matters: “who approved what?” cannot be ambiguous during audits.',
-    how: 'How it works: governance gates translate obligation to controlled action.',
-    expandChips: ['Steering decisions', 'Exception authority', 'Release gates', 'Evidence sufficiency'],
-  },
-  {
-    key: 'traceability',
-    title: 'Traceability',
-    tagline: 'Proof from regulation to release',
-    tone: 'rose',
-    icon: <Network className="h-6 w-6 text-[#fb7185]" strokeWidth={2.25} />,
-    oneLiner: 'Every risk connects to requirements, design, tests, and release proof.',
-    what: 'What it is: trace links that connect obligations to verified delivery.',
-    why: 'Why it matters: auditors validate the chain—your evidence must hold.',
-    how: 'How it works: traceability proof chains close at each lifecycle gate.',
-    expandChips: ['Requirements → risk', 'Design intent', 'Verification closure', 'Audit-ready evidence'],
+    id: 'track-prove',
+    label: 'Prove',
+    badgeTone: 'prove',
+    description: 'How you demonstrate compliance',
+    chapters: [
+      {
+        num: '09',
+        title: 'Traceability Studio',
+        subtitle: 'Live regulation-to-artifact coverage map',
+        description:
+          'A live traceability matrix showing regulation-to-artifact coverage. Surfaces orphaned items, missing links, and coverage gaps before auditors do.',
+        tags: ['24 Regulations tracked', 'Coverage %', 'Gap detection'],
+        outputs: ['Traceability chain per regulation', 'Coverage dashboard', 'Orphan and gap report'],
+        to: '/traceability-studio',
+      },
+      {
+        num: '10',
+        title: 'Compliance Risk Hotspots',
+        subtitle: 'Ranked failure modes across four domains',
+        description:
+          'A ranked register of known compliance failure modes across Process, Governance, Technical, and Operations domains.',
+        tags: ['Process risks', 'Governance gaps', 'Technical debt', 'Ops failures'],
+        outputs: ['Ranked hotspot table', 'Risk score + heat bar', 'Owner assignment + mitigation'],
+        to: '/compliance-risk-hotspots',
+      },
+    ],
   },
 ]
 
-function toneClass(tone: Pillar['tone']) {
-  if (tone === 'teal') return 'border-[#0b9ec4]/35 bg-[#0b9ec4]/5'
-  if (tone === 'gold') return 'border-[#f59e0b]/35 bg-[#f59e0b]/5'
-  if (tone === 'violet') return 'border-[#a855f7]/35 bg-[#a855f7]/5'
-  return 'border-[#fb7185]/35 bg-[#fb7185]/5'
-}
-
-function iconWrapClass(tone: Pillar['tone']) {
-  if (tone === 'teal') return 'border-[#0b9ec4]/30 bg-[#0b9ec4]/10'
-  if (tone === 'gold') return 'border-[#f59e0b]/30 bg-[#f59e0b]/10'
-  if (tone === 'violet') return 'border-[#a855f7]/30 bg-[#a855f7]/10'
-  return 'border-[#fb7185]/30 bg-[#fb7185]/10'
-}
-
-function MiniDiagram({ pillar }: { pillar: PillarKey }) {
-  // Lightweight signature visuals (SVG) so the overview stays “premium”, not text-heavy.
-  if (pillar === 'classification') {
-    return (
-      <svg viewBox="0 0 180 60" className="h-[60px] w-full">
-        <polygon points="10,15 80,5 80,55 10,45" fill="rgba(11,158,196,0.08)" stroke="#0db3dc" strokeWidth="1.5" />
-        <line x1="80" y1="10" x2="150" y2="30" stroke="#0db3dc" strokeWidth="2" />
-        <circle cx="150" cy="30" r="10" fill="rgba(11,158,196,0.2)" stroke="#0db3dc" strokeWidth="1.5" />
-        <text x="25" y="26" fontSize="7" fill="#7090b0" textAnchor="start">
-          Use case
-        </text>
-        <text x="20" y="38" fontSize="7" fill="#7090b0" textAnchor="start">
-          Risk tier
-        </text>
-        <text x="132" y="34" fontSize="7" fill="#0db3dc" textAnchor="start">
-          Lane
-        </text>
-      </svg>
-    )
-  }
-  if (pillar === 'sdlc') {
-    return (
-      <svg viewBox="0 0 180 60" className="h-[60px] w-full">
-        <rect x="10" y="8" width="160" height="10" rx="4" fill="rgba(11,158,196,0.15)" stroke="#0db3dc" strokeWidth="1" />
-        <rect x="10" y="23" width="120" height="10" rx="4" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" strokeWidth="1" />
-        <rect x="10" y="38" width="80" height="10" rx="4" fill="rgba(168,85,247,0.15)" stroke="#a855f7" strokeWidth="1" />
-        <rect x="10" y="53" width="40" height="10" rx="4" fill="rgba(251,113,133,0.15)" stroke="#fb7185" strokeWidth="1" />
-        <text x="15" y="16" fontSize="6.5" fill="#0db3dc">
-          A
-        </text>
-        <text x="15" y="31" fontSize="6.5" fill="#f59e0b">
-          B
-        </text>
-        <text x="15" y="46" fontSize="6.5" fill="#a855f7">
-          C
-        </text>
-        <text x="15" y="61" fontSize="6.5" fill="#fb7185">
-          D
-        </text>
-      </svg>
-    )
-  }
-  if (pillar === 'governance') {
-    return (
-      <svg viewBox="0 0 180 60" className="h-[60px] w-full">
-        <polygon points="90,5 130,20 50,20" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" strokeWidth="1" />
-        <rect x="40" y="22" width="100" height="11" rx="2" fill="rgba(168,85,247,0.15)" stroke="#a855f7" strokeWidth="1" />
-        <rect x="25" y="35" width="130" height="11" rx="2" fill="rgba(11,158,196,0.1)" stroke="#0db3dc" strokeWidth="1" />
-        <rect x="10" y="48" width="160" height="11" rx="2" fill="rgba(16,185,129,0.08)" stroke="#10b981" strokeWidth="1" />
-        <text x="90" y="16" fontSize="6" fill="#f59e0b" textAnchor="middle">
-          Exec
-        </text>
-        <text x="90" y="30" fontSize="6" fill="#a855f7" textAnchor="middle">
-          Council
-        </text>
-        <text x="90" y="43" fontSize="6" fill="#0db3dc" textAnchor="middle">
-          Boards
-        </text>
-        <text x="90" y="56" fontSize="6" fill="#10b981" textAnchor="middle">
-          Teams
-        </text>
-      </svg>
-    )
-  }
-  return (
-    <svg viewBox="0 0 180 60" className="h-[60px] w-full">
-      <circle cx="20" cy="30" r="8" fill="rgba(11,158,196,0.2)" stroke="#0db3dc" strokeWidth="1.5" />
-      <line x1="28" y1="30" x2="52" y2="30" stroke="#1f3060" strokeWidth="1.5" strokeDasharray="3 2" />
-      <circle cx="60" cy="30" r="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1.5" />
-      <line x1="68" y1="30" x2="92" y2="30" stroke="#1f3060" strokeWidth="1.5" strokeDasharray="3 2" />
-      <circle cx="100" cy="30" r="8" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-      <line x1="108" y1="30" x2="132" y2="30" stroke="#1f3060" strokeWidth="1.5" strokeDasharray="3 2" />
-      <circle cx="140" cy="30" r="8" fill="rgba(16,185,129,0.2)" stroke="#10b981" strokeWidth="1.5" />
-      <line x1="148" y1="30" x2="163" y2="30" stroke="#10b981" strokeWidth="1.5" strokeDasharray="0" />
-      <text x="20" y="47" fontSize="6" fill="#7090b0" textAnchor="middle">
-        Reqs
-      </text>
-      <text x="60" y="47" fontSize="6" fill="#7090b0" textAnchor="middle">
-        Risk
-      </text>
-      <text x="100" y="47" fontSize="6" fill="#7090b0" textAnchor="middle">
-        Design
-      </text>
-      <text x="140" y="47" fontSize="6" fill="#7090b0" textAnchor="middle">
-        Test
-      </text>
-      <text x="168" y="47" fontSize="6" fill="#10b981" textAnchor="middle">
-        ✓
-      </text>
-    </svg>
-  )
-}
+const PERSONAS: Persona[] = [
+  {
+    key: 'engineering',
+    role: 'Engineering',
+    tagline: 'builds compliant software faster',
+    color: '#3b82f6',
+    pain: 'Handed a checklist at release and told to document everything retroactively. No clarity on what compliance requires during build.',
+    gets: [
+      'Exact controls and artifacts required per phase — no guessing',
+      'Automated traceability starter kits so evidence generates as they build',
+      'CI/CD-embedded guardrails that block violations before release',
+    ],
+    chips: ['Guardrails & Paved Roads', 'Lifecycle Architecture', 'SDLC Lanes'],
+  },
+  {
+    key: 'quality',
+    role: 'Quality',
+    tagline: 'governs without being the bottleneck',
+    color: '#f59e0b',
+    pain: 'Manually chasing evidence, enforcing process through heroics, always the person who slows delivery down.',
+    gets: [
+      'Structured phase-gate outputs to review — not raw artifacts to assemble',
+      'Clear governance layer (L1–L4) defining exactly when their sign-off is required',
+      'Evidence binder already organized in audit-ready format',
+    ],
+    chips: ['Governance Model', 'Evidence Architecture', 'Approval Matrix'],
+  },
+  {
+    key: 'ra',
+    role: 'Regulatory Affairs',
+    tagline: 'interprets standards into executable policy',
+    color: '#8b5cf6',
+    pain: 'Standards are interpreted inconsistently across teams. RA has to re-explain obligations on every project.',
+    gets: [
+      'A single authoritative mapping of standard → framework element, agreed once',
+      'Traceability chain from regulation to artifact — ready to show inspectors',
+      'Classification model that converts obligations into lane decisions consistently',
+    ],
+    chips: ['Regulatory Universe', 'Traceability Studio', 'Classification Model'],
+  },
+  {
+    key: 'business',
+    role: 'Business & Product',
+    tagline: 'owns intended use without needing to be a standards expert',
+    color: '#f43f5e',
+    pain: 'No clear answer to "are we compliant?" or "what would it take to release this?" without consulting multiple specialists.',
+    gets: [
+      'Classification gives a definitive risk tier from product intent — no ambiguity',
+      'Release readiness visible through phase gate status, not stakeholder opinion',
+      'Compliance hotspots surfaced early — no late-stage surprises',
+    ],
+    chips: ['Classification Model', 'Compliance Risk Hotspots', 'Approval Matrix'],
+  },
+  {
+    key: 'auditors',
+    role: 'Auditors & Inspectors',
+    tagline: 'follow a coherent story from obligation to proof',
+    color: '#14b8a6',
+    pain: 'Evidence is scattered, unlabelled, and assembled reactively. Hard to verify traceability or confirm standard mapping.',
+    gets: [
+      'Obligations → decisions → controlled execution → evidence — in one coherent arc',
+      'Traceability chain already assembled, regulation-to-artifact',
+      'Evidence binder organized exactly as expected — no reassembly required',
+    ],
+    chips: ['Evidence Architecture', 'Traceability Studio', 'Governance Model'],
+  },
+  {
+    key: 'startups',
+    role: 'MedTech & Digital Health Startups',
+    tagline: 'avoid the regulatory wall 12 months in',
+    color: '#22c55e',
+    pain: 'Built something valuable, then hit a regulatory wall because nobody classified it at the start. Rework is expensive and morale-destroying.',
+    gets: [
+      'Classification at P0 routes the entire build correctly from day one',
+      'Lane assignment sets proportionate controls — not over-engineered for Lane A, not under-prepared for Lane D',
+      'Submission-ready evidence binder built as a byproduct of delivery',
+    ],
+    chips: ['Classification Model', 'SDLC Lanes', 'Evidence Architecture'],
+  },
+]
 
 export function FrameworkOverviewLanding() {
-  const [openPillar, setOpenPillar] = useState<PillarKey | null>(null)
+  const [openPillars, setOpenPillars] = useState<Record<string, boolean>>({})
+  const [openChapters, setOpenChapters] = useState<Record<string, boolean>>({})
+  const [openPersonas, setOpenPersonas] = useState<Record<string, boolean>>({})
 
-  const curriculum = useMemo(
-    () => [
-      {
-        id: 'track-understand',
-        label: 'Understand',
-        badgeTone: 'understand',
-        description: "What you're operating in",
-        chapters: [
-          { num: '01', title: 'Regulatory Universe', for: ['RA'], to: '/regulatory-universe' },
-          { num: '02', title: 'Classification Model', for: ['Engineering', 'Regulatory'], to: '/classification-model' },
-          { num: '03', title: 'SDLC Lanes', for: ['Engineering'], to: '/sdlc-lanes' },
-        ],
-      },
-      {
-        id: 'track-execute',
-        label: 'Execute',
-        badgeTone: 'execute',
-        description: 'How you build and govern',
-        chapters: [
-          { num: '04', title: 'Lifecycle Architecture', for: ['Engineering'], to: '/lifecycle-architecture' },
-          { num: '05', title: 'Evidence Architecture', for: ['Engineering', 'Regulatory'], to: '/evidence-architecture' },
-          { num: '06', title: 'Governance Model', for: ['Regulatory'], to: '/governance-model' },
-          { num: '07', title: 'Approval Matrix', for: ['Engineering'], to: '/approval-matrix' },
-          { num: '08', title: 'Guardrails & Paved Roads', for: ['Engineering'], to: '/guardrails-paved-roads' },
-        ],
-      },
-      {
-        id: 'track-prove',
-        label: 'Prove',
-        badgeTone: 'prove',
-        description: 'How you demonstrate compliance',
-        chapters: [
-          { num: '09', title: 'Traceability Studio', for: ['Engineering', 'Regulatory'], to: '/traceability-studio' },
-          { num: '10', title: 'Compliance Risk Hotspots', for: ['Regulatory'], to: '/compliance-risk-hotspots' },
-        ],
-      },
-    ],
-    [],
-  )
+  const toggleCard = (kind: 'pillar' | 'chapter' | 'persona', key: string) => {
+    if (kind === 'pillar') {
+      setOpenPillars((cur) => ({ ...cur, [key]: !cur[key] }))
+      return
+    }
+    if (kind === 'persona') {
+      setOpenPersonas((cur) => ({ ...cur, [key]: !cur[key] }))
+      return
+    }
+    setOpenChapters((cur) => ({ ...cur, [key]: !cur[key] }))
+  }
 
   const roleItems = [
     { color: TOKENS.teal, label: 'Engineering', verb: 'builds' },
@@ -393,58 +446,209 @@ export function FrameworkOverviewLanding() {
       {/* Problem / Solution / Outcomes blueprint */}
       <ProblemSolutionOutcomesBlueprint />
 
+      {/* WHO THIS SERVES */}
+      <section className="rounded-2xl border border-[#1f3060] bg-[#080f1e] p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <p className="shrink-0 text-[10px] uppercase tracking-[0.18em] text-[#64748b]">WHO THIS SERVES</p>
+            <div className="h-px w-full bg-[#1e2d45]" />
+          </div>
+          <p className="shrink-0 text-[11px] text-[#4a6070]">Click any role to expand</p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {PERSONAS.map((persona) => {
+            const open = !!openPersonas[persona.key]
+            return (
+              <div
+                key={persona.key}
+                className="w-full rounded-xl border bg-[#131929] p-4 transition-colors duration-200"
+                style={{ borderColor: open ? '#6366f1' : '#1e2d45' }}
+              >
+                <button type="button" className="w-full text-left" onClick={() => toggleCard('persona', persona.key)}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <span className="mt-1 h-2 w-2 rounded-full" style={{ backgroundColor: persona.color }} />
+                      <div>
+                        <p className="text-[15px] font-semibold text-white">{persona.role}</p>
+                        <p className="mt-1 text-[12px] text-[#94a3b8]">{persona.tagline}</p>
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className="h-4 w-4 transition-transform duration-200 ease-out"
+                      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', color: open ? '#6366f1' : '#64748b' }}
+                    />
+                  </div>
+                </button>
+
+                <Collapse open={open}>
+                  <div className="mt-3 rounded-xl border border-[#1e2d45] p-3" style={{ backgroundColor: 'rgba(11,15,26,0.4)' }}>
+                    <div className="rounded-md border border-[#1e2d45] bg-white/[0.03] p-3">
+                      <p className="text-[10px] uppercase tracking-[0.1em] text-[#f43f5e]">Current pain</p>
+                      <p className="mt-1 text-[12px] leading-5 text-[#cbd5e1]">{persona.pain}</p>
+                    </div>
+                    <div className="mt-3">
+                      <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">What they get</p>
+                      <ul className="mt-2 space-y-1.5 text-[12px] text-[#cbd5e1]">
+                        {persona.gets.map((item) => (
+                          <li key={`${persona.key}-${item}`} className="flex items-start gap-2">
+                            <span className="mt-[7px] h-[5px] w-[5px] rounded-full" style={{ backgroundColor: persona.color }} />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {persona.chips.map((chip) => (
+                        <span key={`${persona.key}-chip-${chip}`} className="rounded-full border border-[#1e2d45] bg-[#0b0f1a]/40 px-2.5 py-1 text-[10px] text-[#94a3b8]">
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Collapse>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
       {/* PILLARS */}
       <section className="rounded-2xl border border-[#1f3060] bg-[#080f1e] p-5">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-[#3a5070] mb-3">From obligation to proof, without losing the chain</p>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-[#3a5070]">From obligation to proof, without losing the chain</p>
+          <p className="text-[11px] text-[#4a6070]">Click any pillar to expand</p>
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {PILLARS.map((p) => {
-            const open = openPillar === p.key
+            const open = !!openPillars[p.key]
             return (
-              <div key={p.key} className={`group rounded-2xl border p-4 ${toneClass(p.tone)} border-opacity-100`} style={{ borderColor: TOKENS.border }}>
+              <div
+                key={p.key}
+                className="group rounded-2xl border p-4 transition-colors duration-200"
+                style={{ borderColor: open ? '#6366f1' : '#1e2d45', backgroundColor: '#131929' }}
+              >
                 <button
                   type="button"
                   className="w-full text-left"
-                  onClick={() => setOpenPillar((cur) => (cur === p.key ? null : p.key))}
+                  onClick={() => toggleCard('pillar', p.key)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 inline-flex h-11 w-11 items-center justify-center rounded-xl border p-2 ${iconWrapClass(p.tone)}`}>
+                      <div className="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#1e2d45] bg-[#0b0f1a]/40 p-2">
                         {p.icon}
                       </div>
                       <div>
                         <p className="text-[16px] font-semibold text-[#f0f6ff]">{p.title}</p>
-                        <p className="mt-1 text-[13px] text-[#7090b0]">{p.tagline}</p>
+                        <p className="mt-1 text-[13px] text-[#7090b0]">{p.subtitle}</p>
                       </div>
                     </div>
-                    <span className="mt-1 inline-flex items-center rounded-full border border-[#1f3060] bg-[#111e35]/40 px-3 py-1 text-[10px] text-[#0db3dc]">
-                      View detail →
-                    </span>
+                    <ChevronDown
+                      className="mt-1 h-4 w-4 transition-transform duration-200 ease-out"
+                      style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', color: open ? '#6366f1' : '#64748b' }}
+                    />
                   </div>
-
-                  <div className="mt-3">{<MiniDiagram pillar={p.key} />}</div>
-                  <p className="mt-2 text-[14px] leading-5 text-[#f0f6ff]">{p.oneLiner}</p>
                 </button>
 
                 <Collapse open={open}>
-                  <div className="mt-3 space-y-2">
-                    <div className="rounded-xl border border-[#1f3060] bg-[#111e35]/40 p-3">
-                      <p className="text-[13px] font-semibold text-[#f0f6ff]">What</p>
-                      <p className="mt-1 text-[14px] leading-6 text-[#7090b0]">{p.what}</p>
-                    </div>
-                    <div className="rounded-xl border border-[#1f3060] bg-[#111e35]/40 p-3">
-                      <p className="text-[13px] font-semibold text-[#f0f6ff]">Why</p>
-                      <p className="mt-1 text-[14px] leading-6 text-[#7090b0]">{p.why}</p>
-                    </div>
-                    <div className="rounded-xl border border-[#1f3060] bg-[#111e35]/40 p-3">
-                      <p className="text-[13px] font-semibold text-[#f0f6ff]">How</p>
-                      <p className="mt-1 text-[14px] leading-6 text-[#7090b0]">{p.how}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {p.expandChips.map((x) => (
-                        <span key={x} className="rounded-full border border-[#1f3060] bg-[#111e35]/40 px-3 py-1 text-[11px] text-[#7090b0]">
-                          {x}
-                        </span>
-                      ))}
+                  <div className="mt-3 rounded-xl border border-[#1e2d45] p-3" style={{ backgroundColor: 'rgba(11,15,26,0.4)' }}>
+                    {p.key === 'classification' && (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">8 Classification Dimensions</p>
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-[#cbd5e1]">
+                            <li>CD-1 Deployment Context</li>
+                            <li>CD-2 Clinical Criticality</li>
+                            <li>CD-3 Intended Use</li>
+                            <li>CD-4–CD-8 Risk/GxP/data sensitivity/AI/market</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Outputs</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {['SDLC Lane A/B/C/D', 'IEC 62304 Safety Class', 'Evidence depth'].map((chip) => (
+                              <span key={chip} className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] text-indigo-200">{chip}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {p.key === 'sdlc' && (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">4 Lanes</p>
+                          <ul className="mt-2 space-y-1.5 text-[13px] text-[#cbd5e1]">
+                            {[
+                              ['#64748b', 'Lane A (slate) Non-Regulated'],
+                              ['#3b82f6', 'Lane B (blue) GxP/GAMP 5/21 CFR Part 11'],
+                              ['#14b8a6', 'Lane C (teal) Lab workflow/LIMS'],
+                              ['#8b5cf6', 'Lane D (violet) SaMD/IEC 62304 Class C/MDR/FDA'],
+                            ].map(([c, text]) => (
+                              <li key={text} className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c }} />
+                                {text}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Each lane defines</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {['Phase gates required', 'Evidence binders', 'Approval depth', 'Governance layer'].map((chip) => (
+                              <span key={chip} className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] text-indigo-200">{chip}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {p.key === 'governance' && (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">4 Governance Layers</p>
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-[#cbd5e1]">
+                            <li>L1 Delivery Governance (sprint-level automated gates)</li>
+                            <li>L2 Compliance &amp; Design Review (milestone sign-offs)</li>
+                            <li>L3 Change Control Board (regulated changes, major releases)</li>
+                            <li>L4 Post-Market Quality Review (surveillance, CAPA, FSN)</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Owned by</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {['Engineering', 'Quality', 'Regulatory Affairs', 'System Owner'].map((chip) => (
+                              <span key={chip} className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] text-indigo-200">{chip}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {p.key === 'traceability' && (
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Chain links</p>
+                          <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] text-[#cbd5e1]">
+                            <li>Regulation → Requirement → Risk Item</li>
+                            <li>Risk Item → Design Decision → Test Case</li>
+                            <li>Test Case → Approval → Artifact</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Coverage metrics</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {['Regulation coverage %', 'Orphaned items', 'Missing links', 'Audit readiness'].map((chip) => (
+                              <span key={chip} className="rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] text-indigo-200">{chip}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-3">
+                      <Link to={p.linkTo} className="inline-flex rounded-full border border-indigo-400/35 bg-indigo-500/10 px-3 py-1 text-[11px] font-medium text-indigo-200">
+                        {p.linkLabel}
+                      </Link>
                     </div>
                   </div>
                 </Collapse>
@@ -508,10 +712,11 @@ export function FrameworkOverviewLanding() {
             <h2 className="mt-2 text-[18px] font-semibold text-[#c0d8f0]">Follow the story your auditors expect.</h2>
             <p className="mt-2 text-[13px] text-[#3a5070]">obligations → decisions → controlled execution → evidence proof</p>
           </div>
+          <p className="text-[11px] text-[#4a6070]">Click any chapter to expand</p>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          {curriculum.map((t) => (
+          {CHAPTERS_BY_TRACK.map((t) => (
             <div key={t.id}>
               <div className="flex items-center gap-3 mb-4">
                 <span
@@ -530,50 +735,66 @@ export function FrameworkOverviewLanding() {
 
               <div className="grid gap-3">
                 {t.chapters.map((c) => (
-                  <Link key={c.num} to={c.to} className="w-full rounded-2xl border border-[#162040] bg-[#0c1828] p-4 hover:border-[#2a4070] transition">
-                    <p className={`text-[11px] font-semibold ${c.num === '04' || c.num === '05' || c.num === '06' || c.num === '07' || c.num === '08' ? 'text-[#f59e0b]' : c.num === '09' || c.num === '10' ? 'text-[#a855f7]' : 'text-[#0db3dc]'}`}>
-                      {c.num}
-                    </p>
-                    <p className="mt-2 text-[13px] font-semibold text-[#c0d8f0]">{c.title}</p>
-                    <p className="mt-2 text-[11px] text-[#3a5070] leading-4">
-                      {c.title === 'Regulatory Universe'
-                        ? 'Map every obligation that can touch your products.'
-                        : c.title === 'Classification Model'
-                          ? 'Intended use + patient risk routes downstream rigor.'
-                          : c.title === 'SDLC Lanes'
-                            ? 'Four lanes from internal tools to high-risk SaMD.'
-                            : c.title === 'Lifecycle Architecture'
-                              ? 'Phase-by-phase gates, artifacts, and responsibilities.'
-                              : c.title === 'Evidence Architecture'
-                                ? 'Evidence binders organized by phase and gate.'
-                                : c.title === 'Governance Model'
-                                  ? 'Four layers of decisions that make approvals accountable.'
-                                  : c.title === 'Approval Matrix'
-                                    ? 'RACI for release gates, exceptions, and risk acceptance.'
-                                    : c.title === 'Guardrails & Paved Roads'
-                                      ? 'Pre-approved patterns that make compliance the fastest path.'
-                                      : c.title === 'Traceability Studio'
-                                        ? 'Connect risk → requirements → design → tests → release proof.'
-                                        : 'Pre-mapped failure modes and mitigation patterns.'}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {c.for.map((f) => (
-                        <span
-                          key={`${c.num}-${f}`}
-                          className={`inline-flex h-6 w-10 items-center justify-center rounded-md border bg-[#111e35]/40 ${
-                            f === 'Engineering' ? 'border-[#f59e0b]/35' : 'border-[#0b9ec4]/35'
-                          }`}
-                          title={f}
-                        >
-                          {f === 'Engineering' ? (
-                            <Route className="h-[18px] w-[18px] text-[#f59e0b]" strokeWidth={2.8} />
-                          ) : (
-                            <ShieldCheck className="h-[18px] w-[18px] text-[#0b9ec4]" strokeWidth={2.8} />
-                          )}
-                        </span>
-                      ))}
-                    </div>
-                  </Link>
+                  <div
+                    key={c.num}
+                    className="w-full rounded-2xl border bg-[#131929] p-4 transition-colors duration-200"
+                    style={{ borderColor: openChapters[c.num] ? '#6366f1' : '#1e2d45' }}
+                  >
+                    <button type="button" className="w-full text-left" onClick={() => toggleCard('chapter', c.num)}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`inline-flex h-7 min-w-7 items-center justify-center rounded-md border px-2 font-mono text-[11px] font-semibold ${
+                              t.badgeTone === 'understand'
+                                ? 'border-[#3b82f6]/35 bg-[#3b82f6]/10 text-[#60a5fa]'
+                                : t.badgeTone === 'execute'
+                                  ? 'border-[#f59e0b]/35 bg-[#f59e0b]/10 text-[#f59e0b]'
+                                  : 'border-[#a855f7]/35 bg-[#a855f7]/10 text-[#a855f7]'
+                            }`}
+                          >
+                            {c.num}
+                          </span>
+                          <div>
+                            <p className="text-[13px] font-semibold text-[#c0d8f0]">{c.title}</p>
+                            <p className="mt-1 text-[11px] text-[#64748b]">{c.subtitle}</p>
+                          </div>
+                        </div>
+                        <ChevronDown
+                          className="h-4 w-4 transition-transform duration-200 ease-out"
+                          style={{ transform: openChapters[c.num] ? 'rotate(180deg)' : 'rotate(0deg)', color: openChapters[c.num] ? '#6366f1' : '#64748b' }}
+                        />
+                      </div>
+                    </button>
+
+                    <Collapse open={!!openChapters[c.num]}>
+                      <div className="mt-3 rounded-xl border border-[#1e2d45] p-3" style={{ backgroundColor: 'rgba(11,15,26,0.4)' }}>
+                        <p className="text-[12px] leading-5 text-[#94a3b8]">{c.description}</p>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {c.tags.map((tag) => (
+                            <span key={`${c.num}-${tag}`} className="rounded-full border border-[#1e2d45] bg-[#0b0f1a]/40 px-2.5 py-1 text-[10px] text-[#94a3b8]">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-3">
+                          <p className="text-[10px] uppercase tracking-[0.1em] text-[#64748b]">Key outputs</p>
+                          <ul className="mt-2 space-y-1.5 text-[12px] text-[#cbd5e1]">
+                            {c.outputs.map((output) => (
+                              <li key={`${c.num}-out-${output}`} className="flex items-center gap-2">
+                                <span className="h-[5px] w-[5px] rounded-full bg-[#10b981]" />
+                                {output}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="mt-3">
+                          <Link to={c.to} className="inline-flex rounded-full border border-indigo-400/35 bg-indigo-500/10 px-3 py-1 text-[11px] font-medium text-indigo-200">
+                            Open chapter →
+                          </Link>
+                        </div>
+                      </div>
+                    </Collapse>
+                  </div>
                 ))}
               </div>
             </div>
