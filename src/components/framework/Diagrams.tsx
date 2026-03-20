@@ -150,9 +150,9 @@ export function RegulatoryOrbitMap({ items, compact }: { items: Regulation[]; co
 export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
   const laneColor = (id: Lane['id']) => {
     if (id === 'A') return '#64748b'
-    if (id === 'B') return '#3b82f6'
-    if (id === 'C') return '#14b8a6'
-    return '#8b5cf6'
+    if (id === 'B') return '#d97706'
+    if (id === 'C') return '#0d9488'
+    return '#6d28d9'
   }
 
   const laneDesc = (lane: Lane) => {
@@ -300,16 +300,19 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
             />
             {lanes.map((lane, idx) => {
               const isActive = lane.id === activeLaneId
-              const isLeftFilled = idx <= lanes.findIndex((l) => l.id === activeLaneId)
+              const activeIdx = lanes.findIndex((l) => l.id === activeLaneId)
+              const c = laneColor(lane.id)
+              const segmentFilled = activeIdx >= 0 && idx < activeIdx
               return (
               <div key={lane.id} className="flex items-start flex-1 min-w-0">
                 <div className="w-full min-w-[92px] text-center">
                   <div
-                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border font-semibold"
+                    className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border-2 font-semibold"
                     style={{
-                      borderColor: `${laneColor(lane.id)}99`,
-                      backgroundColor: isActive ? laneColor(lane.id) : `${laneColor(lane.id)}14`,
-                      color: isActive ? '#f8fafc' : laneColor(lane.id),
+                      borderColor: `${c}cc`,
+                      backgroundColor: isActive ? c : 'transparent',
+                      color: isActive ? '#f8fafc' : c,
+                      boxShadow: isActive ? `0 0 0 1px ${c}40` : undefined,
                     }}
                   >
                     {lane.id}
@@ -321,17 +324,20 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
                   <div
                     className="mx-2 mt-[18px] h-[2px] flex-1 rounded-full"
                     style={{
-                      background: isLeftFilled
+                      background: segmentFilled
                         ? `linear-gradient(90deg, ${laneColor(activeLaneId)} 0%, ${laneColor(activeLaneId)} 100%)`
-                        : 'linear-gradient(90deg, rgba(148,163,184,0.2) 0%, rgba(148,163,184,0.2) 100%)',
+                        : 'linear-gradient(90deg, rgba(148,163,184,0.22) 0%, rgba(148,163,184,0.22) 100%)',
                     }}
                   />
                 )}
               </div>
-            )})}
+            )
+            })}
             <div
               className="mt-[18px] h-[2px] flex-1 rounded-full"
-              style={{ background: `linear-gradient(90deg, ${laneColor('D')} 0%, rgba(139,92,246,0.1) 100%)` }}
+              style={{
+                background: `linear-gradient(90deg, ${laneColor(activeLaneId)} 0%, rgba(148,163,184,0.12) 100%)`,
+              }}
             />
           </div>
         </div>
@@ -2049,12 +2055,10 @@ export function FrameworkHeroPoster() {
       <div className="relative p-6 md:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-slate-300">CODEX</p>
-            <p className="mt-2 text-xs uppercase tracking-[0.32em] text-slate-300">REGULATED SOFTWARE COMPLIANCE FRAMEWORK</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-slate-300">CODEX · FRAMEWORK ATLAS</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-50 md:text-5xl">
-              Regulated Software Compliance
-              <br />
-              Framework
+              Codex
+              <span className="block mt-1 text-2xl font-medium text-slate-300 md:text-3xl">Regulated Software Compliance Framework</span>
             </h1>
             <p className="mt-4 text-base text-slate-300">
               The foundation for building, validating, and operating software in a regulated healthcare environment. A consulting-grade reference architecture linking obligations, lifecycle rigor, governance, and traceable evidence.

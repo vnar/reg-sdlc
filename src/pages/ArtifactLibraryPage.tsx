@@ -988,7 +988,8 @@ function ArtifactTemplateCard({
 
 export default function ArtifactLibraryPage() {
   const [pathAIExampleMode, setPathAIExampleMode] = useState(false)
-  const firstArtifactId = ARTIFACT_GROUPS[0]?.artifacts[0]?.id ?? ''
+  /** Always resolve to ART-001 (first template) so the detail panel is never empty on first paint. */
+  const firstArtifactId = ARTIFACT_GROUPS[0]?.artifacts[0]?.id ?? 'ART-001'
   const initialExpandedGroups: Record<ArtifactGroupId, boolean> = {
     g1: true,
     g2: false,

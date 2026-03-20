@@ -374,13 +374,12 @@ function FieldTableRow({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+/** Matches Artifact Library list body: Inter / system sans, 12px, slate-200 */
 function listValue(items: string[]) {
   return (
-    <ul className="list-disc space-y-1 pl-5">
+    <ul className="list-disc space-y-1 pl-5 font-sans text-[12px] leading-6 text-slate-200">
       {items.map((item) => (
-        <li key={item} className="leading-5">
-          {item}
-        </li>
+        <li key={item}>{item}</li>
       ))}
     </ul>
   )
@@ -415,18 +414,18 @@ function NarrativeSection({
 }) {
   return (
     <section
-      className="pt-5"
+      className="pt-[22px] font-sans text-[12px] leading-6 text-slate-200"
       style={{
-        borderTop: `1px solid ${color}55`,
+        borderTop: `1px solid ${color}44`,
         backgroundColor: tinted ? 'rgba(109,40,217,0.06)' : 'transparent',
         borderRadius: tinted ? 10 : 0,
         paddingInline: tinted ? 12 : 0,
         paddingBottom: tinted ? 12 : 0,
       }}
     >
-      <div className="mb-2 flex items-center gap-2">
-        <span className="h-4 w-1 rounded-full" style={{ backgroundColor: color }} />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color }}>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="h-5 w-1 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color }}>
           {label}
         </p>
       </div>
@@ -447,7 +446,7 @@ function UseCaseTemplateCard({
   onToggle: () => void
 }) {
   return (
-    <div className="uc-usecase-card">
+    <div className="uc-usecase-card font-sans">
       <div
         className="rounded-2xl border border-white/10 bg-slate-900/40 p-4"
         style={{
@@ -483,7 +482,7 @@ function UseCaseTemplateCard({
 
         {expanded ? (
           <div className="mt-4 space-y-1">
-            <table className="w-full border-collapse text-left">
+            <table className="w-full border-collapse text-left font-sans text-[12px] text-slate-200">
               <tbody>
                 <FieldTableRow label="Use Case ID" value={<span className="font-mono text-slate-100">{useCase.id}</span>} />
                 <FieldTableRow label="Title" value={<span className="text-slate-200">{useCase.title}</span>} />
@@ -492,20 +491,21 @@ function UseCaseTemplateCard({
               </tbody>
             </table>
 
+            <div className="mt-6 space-y-0">
             <NarrativeSection label="Problem Statement" color="#e11d48">
-              <p className="text-sm text-slate-200">{useCase.problemStatement}</p>
+              <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.problemStatement}</p>
             </NarrativeSection>
 
             <NarrativeSection label="Current State" color="#d97706">
-              <div className="text-slate-200">{listValue(useCase.currentState)}</div>
+              {listValue(useCase.currentState)}
             </NarrativeSection>
 
             <NarrativeSection label="AI Enablement" color="#6d28d9" tinted>
-              <div className="text-slate-200">{listValue(useCase.aiEnablement)}</div>
+              {listValue(useCase.aiEnablement)}
             </NarrativeSection>
 
             <NarrativeSection label="Future State" color="#0d9488">
-              <p className="text-sm text-slate-200">{useCase.futureState}</p>
+              <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.futureState}</p>
             </NarrativeSection>
 
             <NarrativeSection label="Business Value" color="#3b4bc8">
@@ -518,13 +518,14 @@ function UseCaseTemplateCard({
               </div>
             </NarrativeSection>
 
-            <section className="pt-5">
+            <section className="pt-[22px] font-sans text-[12px] leading-6 text-slate-200">
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Recommended Visual</p>
               <div className="space-y-2">
-                <p className="text-slate-200">{useCase.recommendedVisual}</p>
+                <p>{useCase.recommendedVisual}</p>
                 <AIFlowStrip narrative={useCase.recommendedVisual} />
               </div>
             </section>
+            </div>
           </div>
         ) : null}
       </div>
@@ -534,7 +535,7 @@ function UseCaseTemplateCard({
 
 export default function AIUseCasesPage() {
   const [expandedGroups, setExpandedGroups] = useState<Record<UseCaseGroupId, boolean>>({ g1: true, g2: false, g3: false, g4: false })
-  const [selectedUseCaseId, setSelectedUseCaseId] = useState<string | null>(null)
+  const [selectedUseCaseId, setSelectedUseCaseId] = useState<string>(USE_CASES[0]?.id ?? 'UC-01')
   const [detailExpanded, setDetailExpanded] = useState(true)
 
   const groupedUseCases = useMemo(
@@ -546,7 +547,10 @@ export default function AIUseCasesPage() {
     []
   )
 
-  const selectedUseCase = useMemo(() => USE_CASES.find((item) => item.id === selectedUseCaseId) ?? null, [selectedUseCaseId])
+  const selectedUseCase = useMemo(
+    () => USE_CASES.find((item) => item.id === selectedUseCaseId) ?? USE_CASES[0] ?? null,
+    [selectedUseCaseId]
+  )
 
   useEffect(() => {
     if (!selectedUseCase) return
@@ -627,13 +631,18 @@ export default function AIUseCasesPage() {
         </aside>
 
         <main>
-          {!selectedUseCase ? (
+          {selectedUseCase ? (
+            <UseCaseTemplateCard
+              useCase={selectedUseCase}
+              accent={USE_CASE_GROUPS.find((group) => group.id === selectedUseCase.groupId)?.accent ?? '#4F46E5'}
+              expanded={detailExpanded}
+              onToggle={() => setDetailExpanded((prev) => !prev)}
+            />
+          ) : (
             <Card className="rounded-2xl border border-white/10 bg-slate-900/30 p-8 text-center">
               <p className="text-sm font-semibold text-slate-100">Use Case Overview</p>
               <p className="mt-1 text-sm text-slate-300">Select a use case from the explorer to view the full transformation narrative.</p>
             </Card>
-          ) : (
-            <UseCaseTemplateCard useCase={selectedUseCase} accent={USE_CASE_GROUPS.find((group) => group.id === selectedUseCase.groupId)?.accent ?? '#4F46E5'} expanded={detailExpanded} onToggle={() => setDetailExpanded((prev) => !prev)} />
           )}
         </main>
       </div>

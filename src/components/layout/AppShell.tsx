@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <div>
                   <p className="text-lg font-bold tracking-tight text-indigo-300">CODEX</p>
                   <p className="mt-0.5 text-[10px] font-normal tracking-[0.04em] text-slate-400">Regulated Software Compliance Framework</p>
-                  <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-slate-500">Last published 20 Mar 2026</p>
+                  <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-slate-500">Last published · 20 Mar 2026</p>
                 </div>
               ) : (
                 <Shield size={18} className="text-violet-200" />
