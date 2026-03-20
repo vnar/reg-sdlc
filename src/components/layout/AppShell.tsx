@@ -1,6 +1,22 @@
-import { Compass, Shield, Binary, Route, GitBranch, FolderKanban, Landmark, CheckSquare, Network, Siren, Milestone } from 'lucide-react'
+import {
+  Compass,
+  Shield,
+  Binary,
+  Route,
+  GitBranch,
+  FolderKanban,
+  Landmark,
+  CheckSquare,
+  Network,
+  Siren,
+  Milestone,
+  Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
+} from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 
 const frameworkNavItems = [{ to: '/', label: 'Framework Overview', icon: Compass }]
@@ -24,93 +40,144 @@ const operatingModelNavItems = [
 
 const allNavItems = [...frameworkNavItems, ...chapterNavItems, ...operatingModelNavItems]
 
+function NavSection({
+  title,
+  items,
+  collapsed,
+  onNavigate,
+}: {
+  title: string
+  items: typeof frameworkNavItems
+  collapsed: boolean
+  onNavigate: () => void
+}) {
+  return (
+    <div>
+      {!collapsed ? <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">{title}</p> : null}
+      <nav className="space-y-1">
+        {items.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            onClick={onNavigate}
+            title={collapsed ? item.label : undefined}
+            className={({ isActive }) =>
+              clsx(
+                'group flex items-center rounded-xl border text-sm transition duration-200',
+                collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2',
+                isActive
+                  ? 'border-violet-500/50 bg-violet-500/10 text-violet-100'
+                  : 'border-transparent text-slate-300 hover:border-white/10 hover:bg-white/5'
+              )
+            }
+          >
+            <item.icon size={16} className="shrink-0 transition group-hover:scale-105" />
+            {!collapsed ? <span className="truncate">{item.label}</span> : null}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const current = allNavItems.find((item) => item.to === location.pathname)?.label ?? 'Workspace'
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 portal-bg">
-      <div className="mx-auto grid max-w-[1800px] grid-cols-1 lg:grid-cols-[300px_1fr]">
-        <aside className="border-r border-white/10 bg-slate-950/85 p-4 backdrop-blur-xl lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto">
-          <div className="mb-6 rounded-2xl border border-white/10 bg-slate-900 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Regulated Governance</p>
-            <h1 className="mt-2 text-lg font-semibold leading-tight text-slate-100">Software Compliance Portal</h1>
+      {mobileNavOpen ? (
+        <button
+          aria-label="Close navigation"
+          onClick={() => setMobileNavOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+        />
+      ) : null}
+
+      <div className="mx-auto flex min-h-screen max-w-[1800px]">
+        <aside
+          className={clsx(
+            'fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+            'w-[300px]',
+            sidebarCollapsed ? 'lg:w-20' : 'lg:w-[300px]',
+            mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          <div className={clsx('mb-5 rounded-2xl border border-white/10 bg-slate-900/85', sidebarCollapsed ? 'p-2' : 'p-4')}>
+            <div className={clsx('flex', sidebarCollapsed ? 'justify-center' : 'items-start justify-between gap-2')}>
+              {!sidebarCollapsed ? (
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Regulated Governance</p>
+                  <h1 className="mt-2 text-lg font-semibold leading-tight text-slate-100">Software Compliance Portal</h1>
+                </div>
+              ) : (
+                <Shield size={18} className="text-violet-200" />
+              )}
+              <button
+                className="hidden rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-100 lg:inline-flex"
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                onClick={() => setSidebarCollapsed((value) => !value)}
+              >
+                {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+            </div>
           </div>
-          <div className="space-y-6">
-            <div>
-              <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">Framework</p>
-              <nav className="space-y-1">
-                {frameworkNavItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      clsx(
-                        'group flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition duration-200',
-                        isActive
-                          ? 'border-violet-500/50 bg-violet-500/10 text-violet-100'
-                          : 'border-transparent text-slate-300 hover:translate-x-0.5 hover:border-white/10 hover:bg-white/5'
-                      )
-                    }
-                  >
-                    <item.icon size={16} className="transition group-hover:scale-105" />
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
 
-            <div>
-              <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">Chapters</p>
-              <nav className="space-y-1">
-                {chapterNavItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      clsx(
-                        'group flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition duration-200',
-                        isActive
-                          ? 'border-violet-500/50 bg-violet-500/10 text-violet-100'
-                          : 'border-transparent text-slate-300 hover:translate-x-0.5 hover:border-white/10 hover:bg-white/5'
-                      )
-                    }
-                  >
-                    <item.icon size={16} className="transition group-hover:scale-105" />
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
-
-            <div>
-              <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-400">Operating Model</p>
-              <nav className="space-y-1">
-                {operatingModelNavItems.map((item) => (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={({ isActive }) =>
-                      clsx(
-                        'group flex items-center gap-3 rounded-xl border px-3 py-2 text-sm transition duration-200',
-                        isActive
-                          ? 'border-violet-500/50 bg-violet-500/10 text-violet-100'
-                          : 'border-transparent text-slate-300 hover:translate-x-0.5 hover:border-white/10 hover:bg-white/5'
-                      )
-                    }
-                  >
-                    <item.icon size={16} className="transition group-hover:scale-105" />
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
+          <div className={clsx('space-y-6 overflow-y-auto', sidebarCollapsed ? 'h-[calc(100vh-112px)]' : 'h-[calc(100vh-156px)]')}>
+            <NavSection
+              title="Framework"
+              items={frameworkNavItems}
+              collapsed={sidebarCollapsed}
+              onNavigate={() => setMobileNavOpen(false)}
+            />
+            <NavSection
+              title="Chapters"
+              items={chapterNavItems}
+              collapsed={sidebarCollapsed}
+              onNavigate={() => setMobileNavOpen(false)}
+            />
+            <NavSection
+              title="Operating Model"
+              items={operatingModelNavItems}
+              collapsed={sidebarCollapsed}
+              onNavigate={() => setMobileNavOpen(false)}
+            />
           </div>
         </aside>
-        <main className="p-4 md:p-6">
+
+        <main className="min-w-0 flex-1 p-4 md:p-6">
           <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur">
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Regulated Software Compliance Portal</p>
-            <p className="text-sm font-medium text-slate-200">{current}</p>
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-100 lg:hidden"
+                aria-label="Open navigation"
+                onClick={() => setMobileNavOpen(true)}
+              >
+                <Menu size={16} />
+              </button>
+              <button
+                className="hidden rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-100 lg:inline-flex"
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                onClick={() => setSidebarCollapsed((value) => !value)}
+              >
+                {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Regulated Software Compliance Portal</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {mobileNavOpen ? (
+                <button
+                  className="rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-100 lg:hidden"
+                  aria-label="Close navigation"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  <X size={16} />
+                </button>
+              ) : null}
+              <p className="text-sm font-medium text-slate-200">{current}</p>
+            </div>
           </div>
           {children}
         </main>
