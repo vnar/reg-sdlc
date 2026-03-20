@@ -14,6 +14,7 @@ const GuardrailsPavedRoadsPage = lazy(() => import('./pages/FrameworkPages').the
 const TraceabilityStudioPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.TraceabilityStudioPage })))
 const ComplianceRiskHotspotsPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.ComplianceRiskHotspotsPage })))
 const ArtifactLibraryPage = lazy(() => import('./pages/ArtifactLibraryPage'))
+const AIUseCasesPage = lazy(() => import('./pages/AIUseCasesPage'))
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="/traceability-studio" element={<TraceabilityStudioPage />} />
           <Route path="/compliance-risk-hotspots" element={<ComplianceRiskHotspotsPage />} />
           <Route path="/artifact-library" element={<ArtifactLibraryPage />} />
+          <Route path="/ai-use-cases" element={<AIUseCasesPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

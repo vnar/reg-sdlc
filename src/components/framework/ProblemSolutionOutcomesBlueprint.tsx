@@ -29,45 +29,49 @@ export default function ProblemSolutionOutcomesBlueprint() {
       </section>
 
       {/* Middle panel */}
-      <section className="rounded-[14px] border border-[#1e2d45] bg-[#131929] p-6">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-teal-300">Unified Solution Framework</p>
+      <section className="rounded-[14px] border border-cyan-400/35 bg-gradient-to-b from-[#0f2138] to-[#111a2d] p-6 shadow-[0_0_0_1px_rgba(34,211,238,0.08),0_12px_36px_rgba(8,145,178,0.22)]">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-cyan-200">Unified Solution Framework</p>
+          <span className="rounded-full border border-cyan-300/40 bg-cyan-400/15 px-2.5 py-0.5 text-[10px] font-semibold text-cyan-100">Main issue solved</span>
+        </div>
+        <p className="mt-2 text-[13px] font-semibold text-slate-100">From regulatory ambiguity to executable controls.</p>
 
-        <div className="mt-4 space-y-2">
+        <div className="mt-4 space-y-3">
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Input</p>
-              <div className="mt-1 rounded-lg border border-[#1e2d45] bg-[#0b0f1a]/50 p-3">
+              <div className="mt-1 rounded-lg border border-cyan-900/60 bg-slate-950/55 p-3">
                 <p className="text-[12px] font-semibold text-slate-100">Regulatory Obligations</p>
               </div>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Processing</p>
-              <div className="mt-1 rounded-lg border border-indigo-400/30 bg-indigo-500/10 p-3">
-                <p className="text-[12px] font-semibold text-indigo-200">Translation &amp; Automation Controls</p>
+              <div className="mt-1 rounded-lg border border-cyan-300/50 bg-cyan-500/15 p-3">
+                <p className="text-[12px] font-semibold text-cyan-100">Translation &amp; Automation Controls</p>
               </div>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">Output</p>
-              <div className="mt-1 rounded-lg border border-teal-400/30 bg-teal-500/10 p-3">
-                <p className="text-[12px] font-semibold text-teal-200">Delivery Controls</p>
+              <div className="mt-1 rounded-lg border border-emerald-300/45 bg-emerald-500/15 p-3">
+                <p className="text-[12px] font-semibold text-emerald-100">Delivery Controls</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-center gap-2 text-slate-500">
-            <span>→</span>
-            <span>→</span>
+          <div className="flex items-center justify-center gap-2 text-cyan-200">
+            <span className="text-lg">→</span>
+            <span className="text-lg">→</span>
           </div>
         </div>
 
-        <div className="mt-5">
-          <p className="text-[10px] uppercase tracking-[0.1em] text-slate-500">What it produces</p>
+        <div className="mt-5 rounded-xl border border-cyan-400/20 bg-slate-950/45 p-3">
+          <p className="text-[10px] uppercase tracking-[0.1em] text-cyan-200">What it produces</p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {[
               ['🗺️', 'Conceptual Blueprint'],
               ['📊', 'Automated Studio'],
               ['✅', 'Signed Audit Evidence'],
             ].map(([emoji, label]) => (
-              <div key={label} className="rounded-lg border border-[#1e2d45] bg-[#0b0f1a]/45 p-2.5 text-center">
+              <div key={label} className="rounded-lg border border-cyan-900/60 bg-[#0b0f1a]/55 p-2.5 text-center">
                 <p className="text-sm">{emoji}</p>
                 <p className="mt-1 text-[11px] font-medium text-slate-200">{label}</p>
               </div>

@@ -15,10 +15,12 @@ import {
   PanelLeftOpen,
   X,
   Archive,
+  Bot,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
 import { clsx } from 'clsx'
+import ChangelogDock from './ChangelogDock'
 
 const frameworkNavItems = [{ to: '/', label: 'Framework Overview', icon: Compass }]
 
@@ -39,7 +41,10 @@ const operatingModelNavItems = [
   { to: '/guardrails-paved-roads', label: 'Guardrails & Paved Roads', icon: Milestone },
 ]
 
-const additionalNavItems = [{ to: '/artifact-library', label: 'Artifact Library', icon: Archive }]
+const additionalNavItems = [
+  { to: '/artifact-library', label: 'Artifact Library', icon: Archive },
+  { to: '/ai-use-cases', label: 'AI Enablement', icon: Bot },
+]
 
 const allNavItems = [...frameworkNavItems, ...chapterNavItems, ...operatingModelNavItems, ...additionalNavItems]
 
@@ -102,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex min-h-screen max-w-[1800px]">
         <aside
           className={clsx(
-            'app-sidebar fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+            'app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
             'w-[300px]',
             sidebarCollapsed ? 'lg:w-20' : 'lg:w-[300px]',
             mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
@@ -113,7 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {!sidebarCollapsed ? (
                 <div>
                   <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Regulated Governance</p>
-                  <h1 className="mt-2 text-lg font-semibold leading-tight text-slate-100">Software Compliance Portal</h1>
+                  <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-slate-500">Last published 20 Mar 2026</p>
                 </div>
               ) : (
                 <Shield size={18} className="text-violet-200" />
@@ -128,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className={clsx('space-y-6 overflow-y-auto', sidebarCollapsed ? 'h-[calc(100vh-112px)]' : 'h-[calc(100vh-156px)]')}>
+          <div className={clsx('space-y-5 pr-1', sidebarCollapsed ? 'h-[calc(100vh-112px)] overflow-y-hidden' : 'flex-1 overflow-y-auto')}>
             <NavSection
               title="Framework"
               items={frameworkNavItems}
@@ -148,12 +153,17 @@ export function AppShell({ children }: { children: ReactNode }) {
               onNavigate={() => setMobileNavOpen(false)}
             />
             <NavSection
-              title="Artifacts & AI"
+              title="Compliance Enablement"
               items={additionalNavItems}
               collapsed={sidebarCollapsed}
               onNavigate={() => setMobileNavOpen(false)}
             />
           </div>
+          {!sidebarCollapsed ? (
+            <div className="mt-3 shrink-0">
+              <ChangelogDock />
+            </div>
+          ) : null}
         </aside>
 
         <main className="app-main-area min-w-0 flex-1 p-4 md:p-6">
