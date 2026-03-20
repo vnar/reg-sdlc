@@ -33,73 +33,167 @@ import { FrameworkOverviewLanding } from '../components/framework/FrameworkOverv
 import ClassificationAssessment from '../components/framework/ClassificationAssessment'
 
 function softwareImpactAreasFor(item: Regulation): string[] {
-  const t = `${item.title} ${item.governingBody} ${item.jurisdiction}`.toLowerCase()
-  const areas = new Set<string>()
-  const add = (s: string) => areas.add(s)
-
-  // Always-relevant, meaning-first framing translated into implementation touchpoints.
-  add('Intended-use & claim boundaries → device software behavior')
-  add('Evidence expectations across lifecycle gates')
-  add('Governance & release authorization packages')
-
-  // Drug / device definition anchors.
-  if (t.includes('201(g)')) add('Drug-definition mapping for intended-use boundaries')
-  if (t.includes('201(h)')) add('Device-definition mapping for intended-use boundaries')
-
-  // Registration / listing / premarket governance.
-  if (t.includes('807 subpart e')) add('510(k) premarket evidence packaging for software changes')
-  else if (t.includes('21 cfr part 807')) add('Establishment registration & device listing evidence')
-  if (t.includes('21 cfr part 814')) add('PMA evidence and safety/effectiveness rationale')
-  if (t.includes('21 cfr part 812')) add('IDE clinical study controls for investigational device software')
-
-  // Design controls / QMS.
-  if (t.includes('21 cfr part 820') || t.includes('quality system')) add('Design controls and CGMP governance for device software')
-  if (t.includes('iso 13485')) add('QMS design-control discipline for software lifecycle')
-
-  // Labeling, reporting, and classification.
-  if (t.includes('21 cfr part 801')) add('Labeling & claims control for intended use')
-  if (t.includes('21 cfr part 803')) add('MDR adverse-event & malfunction reporting workflow')
-  if (t.includes('21 cfr part 860')) add('Device classification controls setting regulatory depth')
-
-  // Software boundary and cybersecurity anchors.
-  if (t.includes('520(o)')) add('Software-function boundary mapping for device applicability')
-  if (t.includes('524b')) add('Cybersecurity plan, SBOM, and postmarket vulnerability monitoring')
-
-  // Electronic records / signatures / auditability.
-  if (t.includes('21 cfr part 11') || t.includes('part 11') || t.includes('annex 11') || t.includes('audit trail')) {
-    add('Electronic records & signatures (auditability & retention)')
-    add('Role-based authorization and controlled access for regulated actions')
+  const exactImpacts: Record<string, string[]> = {
+    'FD&C Act 201(g)': [
+      'Defines when software constitutes a drug or drug component',
+      'Triggers 510(k) or PMA pathway for software-driven drug delivery',
+      'Sets intended use boundary for combination products',
+    ],
+    'FD&C Act 201(h)': [
+      'Defines the legal boundary of "medical device" — critical for SaMD classification',
+      'Determines whether software requires premarket notification or approval',
+      'Underpins all IEC 62304 and FDA SaMD guidance applicability',
+    ],
+    '21 CFR Part 807': [
+      'Requires substantial equivalence demonstration before commercial distribution',
+      'Drives design history file and predicate device documentation',
+      'Sets performance testing and labelling obligations',
+    ],
+    '21 CFR Part 807 Subpart E': [
+      'Specifies exact content of a 510(k) submission package',
+      'Requires software documentation per FDA Software Guidance (IEC 62304 aligned)',
+      'Triggers cybersecurity documentation requirements for networked devices',
+    ],
+    '21 CFR Part 814': [
+      'Applies to Class III devices where 510(k) is insufficient',
+      'Requires clinical evidence, manufacturing controls, and post-approval studies',
+      'Demands full software lifecycle documentation to IEC 62304 Class C standard',
+    ],
+    '21 CFR Part 812': [
+      'Governs software used in clinical investigations before market approval',
+      'Requires IDE application, IRB approval, and informed consent processes',
+      'Traceability requirements apply to investigational software versions',
+    ],
+    '21 CFR Part 820': [
+      'Mandates a Design Control process for Class II and III device software',
+      'Requires Design History File (DHF), Device Master Record, and Device History Record',
+      'Drives formal design review, verification & validation, and change control',
+    ],
+    '21 CFR Part 801': [
+      'Controls all labelling including software UI text, instructions for use, and indications',
+      'Requires intended use, contraindications, and warnings to be explicitly stated',
+      'Influences how software version changes trigger labelling review',
+    ],
+    '21 CFR Part 803': [
+      'Mandates reporting of device malfunctions that could cause serious injury or death',
+      'Software bugs that cause adverse events require MDR submissions within 30 days',
+      'Drives post-market surveillance tooling and incident management processes',
+    ],
+    '21 CFR Part 11': [
+      'Requires audit trails for all regulated records created, modified, or deleted',
+      'Mandates access controls, user authentication, and system validation',
+      'Drives electronic signature requirements for approvals in GxP environments',
+    ],
+    'IEC 62304': [
+      'Defines three safety classes (A, B, C) based on hazard to patients',
+      'Mandates software development planning, architecture, unit/integration testing, and maintenance',
+      'Primary standard driving SDLC Lane B, C, D process obligations',
+    ],
+    'ISO 14971': [
+      'Requires systematic identification, estimation, evaluation, and control of risks',
+      'Risk Management File must be maintained throughout the product lifecycle',
+      'Drives traceability from hazard to risk control to verification evidence',
+    ],
+    'EU MDR 2017/745': [
+      'Defines device classification rules (Class I, IIa, IIb, III) for EU market',
+      'Requires Technical Documentation, Clinical Evaluation, and Post-Market Surveillance plan',
+      'Drives CE marking and Notified Body involvement for Class IIa and above',
+    ],
+    'EU IVDR 2017/746': [
+      'Replaces IVDD for lab and diagnostic software placed in EU market',
+      'Stricter classification for companion diagnostics and high-risk IVD software',
+      'Requires performance evaluation, clinical evidence, and EUDAMED registration',
+    ],
   }
 
-  // Privacy and PHI handling.
+  if (exactImpacts[item.title]) return exactImpacts[item.title]
+
+  const t = `${item.title} ${item.governingBody} ${item.jurisdiction} ${item.softwareRelevance}`.toLowerCase()
+  const areas: string[] = []
+  const push = (s: string) => {
+    if (!areas.includes(s)) areas.push(s)
+  }
+
+  // Regulation-aware fallback: specific by subject matter, not a generic repeated template.
   if (t.includes('gdpr')) {
-    add('Privacy governance for personal data (lawful basis & rights)')
-    add('Security safeguards aligned to data protection expectations')
+    push('Defines lawful basis, data subject rights, and cross-border controls for personal-data software workflows')
+    push('Requires privacy-by-design controls in software features, retention, and deletion behavior')
+    push('Drives breach-response and processing-record evidence expectations for regulated operations')
   }
   if (t.includes('hipaa')) {
-    add('PHI safeguards (access, auditability, safeguards)')
-    add('Role-based authorization for regulated access to health information')
+    push('Defines PHI handling controls for confidentiality, integrity, and availability in healthcare software')
+    push('Requires role-based access, audit logging, and safeguards for covered entities and business associates')
+    push('Drives incident response and workforce-policy enforcement for systems touching PHI')
   }
-
-  // Lab / diagnostic workflow impact.
+  if (t.includes('iso 13485')) {
+    push('Establishes QMS controls for software design, change management, and document governance')
+    push('Requires design-transfer and verification records aligned to quality procedures')
+    push('Drives supplier and CAPA controls for software components in regulated devices')
+  }
+  if (t.includes('gamp')) {
+    push('Applies risk-based validation strategy for computerized systems in GxP use cases')
+    push('Defines scalable evidence depth based on software category and business criticality')
+    push('Drives lifecycle deliverables from URS through validation summary and periodic review')
+  }
+  if (t.includes('81001-5-1') || t.includes('cybersecurity')) {
+    push('Requires secure development lifecycle controls for health software and connected ecosystems')
+    push('Drives threat modelling, security verification, and vulnerability handling evidence')
+    push('Links cybersecurity risk controls to release and post-market monitoring obligations')
+  }
+  if (t.includes('62366') || t.includes('usability')) {
+    push('Requires usability engineering focused on use-related risk reduction')
+    push('Drives formative/summative evidence for user interface safety and effectiveness')
+    push('Links user error scenarios to risk controls and verification activities')
+  }
   if (t.includes('42 cfr part 493') || t.includes('clia') || t.includes('cap')) {
-    add('Lab workflow and result traceability requirements')
-    add('Controlled retention for test outcomes and decision history')
+    push('Defines laboratory quality controls for software supporting test workflow and reporting')
+    push('Requires traceable records for specimen handling, result generation, and quality events')
+    push('Drives operational evidence readiness for inspections and accreditation audits')
   }
-  if (t.includes('ivdr') || t.includes('in vitro') || t.includes('2017/746')) add('Diagnostic decision impact and evidence-backed result handling')
+  if (t.includes('pmda') || t.includes('japan')) {
+    push('Defines Japan-specific SaMD obligations for intended use, safety, and effectiveness')
+    push('Requires market-entry evidence aligned to PMD Act expectations and local review pathways')
+    push('Drives post-market monitoring and change-control discipline for deployed software')
+  }
+  if (t.includes('annex 11')) {
+    push('Defines computerized-system validation expectations in EU GMP environments')
+    push('Requires audit trails, role-based access, and data integrity controls for regulated records')
+    push('Drives periodic review and operational monitoring for validated system state')
+  }
+  if (t.includes('multiple function device')) {
+    push('Defines regulated vs non-regulated function boundaries in multifunction software products')
+    push('Requires evidence that non-device functions do not compromise device safety/effectiveness')
+    push('Drives architecture partitioning and verification strategy for mixed-function systems')
+  }
+  if (t.includes('design control guidance')) {
+    push('Translates design control requirements into practical software lifecycle implementation steps')
+    push('Clarifies expectations for requirements, design review, verification, and validation outputs')
+    push('Supports defensible DHF structure and change-control evidence for inspections')
+  }
+  if (t.includes('section 520(o)')) {
+    push('Defines software functions excluded from device definition under FD&C Act')
+    push('Requires clear intended-use framing to separate wellness/support from regulated device behavior')
+    push('Drives boundary documentation to justify non-device classification decisions')
+  }
+  if (t.includes('section 524b')) {
+    push('Requires cybersecurity plans, vulnerability processes, and coordinated disclosure posture')
+    push('Drives SBOM and patchability evidence for cyber devices before and after release')
+    push('Links post-market security monitoring to regulatory maintenance obligations')
+  }
+  if (t.includes('fda regulation (general)')) {
+    push('Applies FDA risk-based controls to software by intended use and patient impact')
+    push('Determines whether 510(k), De Novo, or PMA route is required for commercialization')
+    push('Drives lifecycle evidence expectations from premarket through post-market obligations')
+  }
 
-  // Safety / risk management standards.
-  if (t.includes('iec 62304') || t.includes('62304')) add('Safety-class lifecycle rigor (development, verification, V&V)')
-  if (t.includes('iso 14971') || t.includes('14971')) add('Risk management lifecycle evidence (hazards → controls → residual risk)')
-  if (t.includes('gamp 5') || t.includes('gamp')) add('Risk-based validation planning for computerized systems')
-  if (t.includes('iec 81001-5-1') || t.includes('81001-5-1') || t.includes('cybersecurity')) add('Cybersecurity lifecycle evidence (threat model, SBOM, security testing)')
-  if (t.includes('iec 62366') || t.includes('62366')) add('Usability engineering and user-error controls')
+  // Last-resort fallback: still specific to the item metadata and title.
+  if (areas.length < 3) {
+    push(`${item.title} defines software-team obligations across intended use, evidence, and release governance`)
+    push(`Imposes documentation and control expectations aligned to ${item.jurisdiction} oversight requirements`)
+    push(`Drives traceable lifecycle evidence from requirements through validation and operational change management`)
+  }
 
-  // Jurisdiction anchors.
-  if (t.includes('pmda')) add('PMDA SaMD evidence and postmarket obligations')
-
-  // Keep it crisp for a client-quality side panel.
-  return Array.from(areas).slice(0, 8)
+  return areas.slice(0, 3)
 }
 
 export function FrameworkOverviewPage() {

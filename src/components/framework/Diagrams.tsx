@@ -1063,13 +1063,38 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
   const [filter, setFilter] = useState('')
   const selected = links.find((l) => l.id === selectedId) ?? links[0] ?? null
 
-  const statusForLink = useCallback((l: TraceLink): TraceStatus => {
-    const required = [l.regulation, l.requirement, l.risk, l.design, l.test, l.approval, l.artifact]
-    const present = required.filter(Boolean).length
-    if (present === required.length) return 'verified'
-    if (present >= 5) return 'partial'
-    return 'gap'
-  }, [])
+  const expectedLinksByRegulation: Record<string, number> = useMemo(
+    () => ({
+      '21 CFR Part 11': 3,
+      '21 CFR Part 820': 4,
+      '21 CFR Part 803': 4,
+      'IEC 62304 Class C': 7,
+      'IEC 62304 Class B': 7,
+      'ISO 14971': 5,
+      'EU MDR 2017/745': 6,
+      'EU IVDR 2017/746': 4,
+    }),
+    []
+  )
+
+  const completionForLink = useCallback(
+    (l: TraceLink) => {
+      const present = [l.regulation, l.requirement, l.risk, l.design, l.test, l.approval, l.artifact].filter((x) => Boolean(String(x).trim())).length
+      const expected = expectedLinksByRegulation[l.regulation] ?? 7
+      return { present, expected }
+    },
+    [expectedLinksByRegulation]
+  )
+
+  const statusForLink = useCallback(
+    (l: TraceLink): TraceStatus => {
+      const { present, expected } = completionForLink(l)
+      if (present >= expected) return 'verified'
+      if (present <= 1) return 'gap'
+      return 'partial'
+    },
+    [completionForLink]
+  )
 
   const statusChip = (s: TraceStatus) =>
     s === 'verified'
@@ -1084,12 +1109,13 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
     const partial = statuses.filter((s) => s === 'partial').length
     const gaps = statuses.filter((s) => s === 'gap').length
     const total = links.length
-    const coverage = total === 0 ? 0 : Math.round((fully / total) * 100)
+    // Weighted coverage: fully traced + partial progress contribution.
+    const coverage = total === 0 ? 0 : Math.round(((fully + (partial * 0.65)) / total) * 100)
     return { total, fully, partial, gaps, coverage }
   }, [links, statusForLink])
 
   const regulations = useMemo(() => {
-    const map = new Map<string, { name: string; sub: string; count: number; status: TraceStatus; firstId: string }>()
+    const map = new Map<string, { name: string; sub: string; count: number; status: TraceStatus; firstId: string; present: number; expected: number }>()
     for (const l of links) {
       const k = l.regulation
       const cur = map.get(k)
@@ -1097,16 +1123,19 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
         cur.count += 1
         continue
       }
+      const c = completionForLink(l)
       map.set(k, {
         name: l.regulation,
-        sub: `${l.standard} · Lane ${l.lane}`,
+        sub: `${l.standard} · Lane ${l.regulation === 'ISO 14971' ? 'C/D' : l.lane}`,
         count: 1,
         status: statusForLink(l),
         firstId: l.id,
+        present: c.present,
+        expected: c.expected,
       })
     }
     return Array.from(map.values())
-  }, [links, statusForLink])
+  }, [links, statusForLink, completionForLink])
 
   const grouped = useMemo(() => {
     const classify = (name: string) => {
@@ -1157,10 +1186,10 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
   const stageCount = (key: keyof TraceLink) => new Set(links.map((l) => String(l[key]))).size
 
   const selectedStatus = selected ? statusForLink(selected) : 'partial'
-  const selectedStatusLabel = selectedStatus === 'verified' ? 'Fully Traced' : selectedStatus === 'partial' ? 'Partial' : 'Gap'
+  const selectedStatusLabel = selectedStatus === 'verified' ? 'Fully Traced' : selectedStatus === 'partial' ? 'Partial' : 'Gap Detected'
 
   const refId = (stageLabel: string, value: string, idx: number) => {
-    if (/^[A-Z]{2,4}-\d+/i.test(value)) return value
+    if (/^[A-Z]{1,4}-\d+(?:-\d+)?/i.test(value)) return value
     const prefix =
       stageLabel === 'Regulation'
         ? 'REG'
@@ -1178,7 +1207,7 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
     return `${prefix}-${idx + 1}`
   }
 
-  const sidebarRow = (r: { name: string; sub: string; count: number; status: TraceStatus; firstId: string }) => {
+  const sidebarRow = (r: { name: string; sub: string; count: number; status: TraceStatus; firstId: string; present: number; expected: number }) => {
     const active = selected?.regulation === r.name
     const dotClass = r.status === 'verified' ? 'bg-emerald-400' : r.status === 'partial' ? 'bg-amber-400' : 'bg-rose-400'
     return (
@@ -1195,8 +1224,14 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-100">{r.name}</p>
             <p className="truncate text-xs text-slate-500">{r.sub}</p>
+            <p className="mt-0.5 text-[11px] text-slate-500">
+              {r.status === 'verified' ? `${r.present} chain links` : `${r.present} of ${r.expected} links complete`}
+              {r.status === 'gap' && ' · Action required'}
+            </p>
           </div>
-          <span className="text-[11px] text-slate-400">{r.count} links</span>
+          <span className={`rounded-full border px-2 py-0.5 text-[10px] ${statusChip(r.status)}`}>
+            {r.status === 'verified' ? 'Fully Traced' : r.status === 'partial' ? 'Partial' : 'Gap Detected'}
+          </span>
         </div>
       </button>
     )
@@ -1212,25 +1247,25 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
       <div className="relative space-y-4">
         {/* TOP: Coverage dashboard bar */}
         <div className="rounded-2xl border border-white/10 bg-slate-900/35">
-          <div className="grid grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-stretch">
-            <div className="px-4 py-3 border-r border-white/10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-stretch">
+            <div className="px-4 py-3 border-b border-white/10 sm:border-r sm:border-b-white/10 xl:border-b-0">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Traceability Studio</p>
               <h3 className="mt-1 text-2xl font-semibold text-slate-100">The proof engine</h3>
               <p className="mt-1 text-sm text-slate-400">Every regulation maps to a full chain of evidence.</p>
             </div>
-            <div className="px-4 py-3 border-r border-white/10">
+            <div className="px-4 py-3 border-b border-white/10 sm:border-r xl:border-b-0">
               <p className="text-[11px] uppercase tracking-wider text-slate-500">Total regulations</p>
               <p className="mt-1 text-3xl font-semibold text-slate-100">{coverageStats.total}</p>
             </div>
-            <div className="px-4 py-3 border-r border-white/10">
+            <div className="px-4 py-3 border-b border-white/10 sm:border-b-0 xl:border-r">
               <p className="text-[11px] uppercase tracking-wider text-slate-500">Fully traced</p>
               <p className="mt-1 text-3xl font-semibold text-emerald-300">{coverageStats.fully}</p>
             </div>
-            <div className="px-4 py-3 border-r border-white/10">
+            <div className="px-4 py-3 border-b border-white/10 sm:border-r xl:border-b-0">
               <p className="text-[11px] uppercase tracking-wider text-slate-500">Partial</p>
               <p className="mt-1 text-3xl font-semibold text-amber-300">{coverageStats.partial}</p>
             </div>
-            <div className="px-4 py-3 border-r border-white/10">
+            <div className="px-4 py-3 border-b border-white/10 sm:border-b-0 xl:border-r">
               <p className="text-[11px] uppercase tracking-wider text-slate-500">Gaps</p>
               <p className="mt-1 text-3xl font-semibold text-rose-300">{coverageStats.gaps}</p>
             </div>
@@ -1244,7 +1279,7 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
           </div>
         </div>
 
-        <div className="grid grid-cols-[280px_1fr] gap-4 items-start">
+        <div className="grid grid-cols-1 gap-4 items-start lg:grid-cols-[280px_1fr]">
           {/* LEFT SIDEBAR */}
           <aside className="rounded-2xl border border-white/10 bg-slate-900/35 p-3">
             <input
@@ -1270,16 +1305,22 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
           <div className="space-y-3">
             {/* CHAIN HEADER */}
             <div className="rounded-2xl border border-white/10 bg-slate-900/35 p-4">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col items-start justify-between gap-3 sm:flex-row">
                 <div>
                   <h4 className="text-xl font-semibold text-slate-100">{selected?.regulation ?? 'Select a regulation'}</h4>
-                  <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-400">
                     {selected ? `${selected.standard} context with linked requirement, risk controls, and evidence chain.` : 'Select a relationship link to inspect the chain.'}
                   </p>
+              {selected && (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {completionForLink(selected).present} of {completionForLink(selected).expected} links complete
+                  {selectedStatus === 'gap' && ' · Action required'}
+                </p>
+              )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-indigo-400/25 bg-indigo-500/12 px-3 py-1 text-xs text-indigo-200">
-                    {selected ? `Lane ${selected.lane}` : 'Lane —'}
+                  {selected ? `Lane ${selected.regulation === 'ISO 14971' ? 'C/D' : selected.lane}` : 'Lane —'}
                   </span>
                   <span className={`rounded-full border px-3 py-1 text-xs ${statusChip(selectedStatus)}`}>{selectedStatusLabel}</span>
                 </div>
@@ -1287,8 +1328,8 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
             </div>
 
             {/* PIPELINE STRIP */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/30 p-3">
-              <div className="flex items-center">
+            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/30 p-3">
+              <div className="flex min-w-[640px] items-center">
                 {stageSpec.map((s, idx) => (
                   <div key={s.key} className="flex items-center flex-1 min-w-0">
                     <div className="w-full text-center">
@@ -1302,20 +1343,21 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
             </div>
 
             {/* CHAIN CARDS */}
-            <div className="relative space-y-3 pl-6">
+            <div className="relative space-y-3 pl-6 sm:pl-6">
               <div className="absolute left-2.5 top-1 bottom-1 w-px bg-white/10" />
               {selected &&
                 stageSpec.map((s, idx) => {
-                  const value = String(selected[s.key])
+                  const value = String(selected[s.key] ?? '')
+                  const hasValue = Boolean(value.trim())
                   const ref = refId(s.label, value, idx)
                   return (
                     <div key={s.key} className="relative rounded-2xl border border-white/10 bg-slate-900/35 p-4">
                       <span className={clsx('absolute -left-6 top-6 h-3 w-3 rounded-full border', toneClass(s.tone))} />
                       <div className="flex items-start justify-between gap-3">
                         <span className={clsx('rounded-md border px-2 py-1 text-[11px] uppercase tracking-wider', toneClass(s.tone))}>{s.label}</span>
-                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-slate-300">{ref}</span>
+                        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-slate-300">{hasValue ? ref : '—'}</span>
                       </div>
-                      <h5 className="mt-2 text-lg font-semibold text-slate-100">{value}</h5>
+                      <h5 className="mt-2 text-lg font-semibold text-slate-100">{hasValue ? value : 'Not linked yet'}</h5>
                       <p className="mt-1 text-sm text-slate-400">
                         {s.label === 'Regulation'
                           ? 'Primary obligation anchor for this trace chain.'

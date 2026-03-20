@@ -13,6 +13,8 @@ type AssessmentDimension = {
   id: string
   title: string
   question: string
+  collapsedDescription: string
+  determines: string
   options: AssessmentOption[]
 }
 
@@ -21,6 +23,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-1',
     title: 'Intended Use',
     question: 'Is this software intended to diagnose, treat, cure, mitigate, or prevent a disease or condition?',
+    collapsedDescription: 'Is this software intended to diagnose, treat, monitor, or support clinical decision-making for patients?',
+    determines: 'SaMD classification and FDA/MDR applicability',
     options: [
       { label: 'Clinical decision support', sub: 'Directly informs clinical decisions', risk: 'high' },
       { label: 'Administrative / operational', sub: 'Scheduling, billing, workflow', risk: 'low' },
@@ -32,6 +36,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-2',
     title: 'Regulated Output Impact',
     question: 'Does the software output directly drive or influence a regulated decision?',
+    collapsedDescription: 'Does the software output directly drive or influence a clinical action, lab result, or device behavior?',
+    determines: 'IEC 62304 safety class (A, B, or C)',
     options: [
       { label: 'Drives clinical action', sub: 'Output triggers treatment or diagnosis', risk: 'high' },
       { label: 'Informs clinician', sub: 'Clinician makes the final call', risk: 'medium' },
@@ -43,6 +49,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-3',
     title: 'Device / Lab / Non-device determination',
     question: 'Is this software embedded in, controlling, or part of a physical device or lab instrument?',
+    collapsedDescription: 'Is the software embedded in a device, standalone SaMD, a lab system, or purely enterprise-facing?',
+    determines: 'Lane C vs Lane D assignment',
     options: [
       { label: 'Embedded in device', sub: 'Controls or runs on medical hardware', risk: 'high' },
       { label: 'Standalone, connected to device', sub: "Interfaces with but doesn't control", risk: 'medium' },
@@ -54,6 +62,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-4',
     title: 'Data and Privacy classification',
     question: 'What category of data does this software process or store?',
+    collapsedDescription: 'Does the software process, store, or transmit PHI, PII, or regulated health data?',
+    determines: '21 CFR Part 11 applicability and audit trail requirements',
     options: [
       { label: 'PHI / PII', sub: 'Protected health or personal identity data', risk: 'high' },
       { label: 'De-identified health data', sub: 'No direct patient identifiers', risk: 'medium' },
@@ -65,6 +75,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-5',
     title: 'Cybersecurity Relevance',
     question: 'Does the software have network connectivity, external APIs, or access to sensitive systems?',
+    collapsedDescription: 'Does the software have network connectivity, external interfaces, or access to clinical infrastructure?',
+    determines: 'Security controls tier and threat modelling requirement',
     options: [
       { label: 'Internet-connected + sensitive data', sub: 'External exposure with PII/PHI', risk: 'high' },
       { label: 'Internal network only', sub: 'Behind firewall, no external APIs', risk: 'medium' },
@@ -76,6 +88,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-6',
     title: 'Electronic Records / Signatures',
     question: 'Does this software create or manage records subject to 21 CFR Part 11 or equivalent?',
+    collapsedDescription: 'Are electronic records or signatures used in regulated workflows such as approvals, batch records, or audit trails?',
+    determines: '21 CFR Part 11 compliance obligations',
     options: [
       { label: 'Full Part 11 scope', sub: 'Electronic records + signatures required', risk: 'high' },
       { label: 'Partial (audit trails only)', sub: 'Logging required, no e-sig', risk: 'medium' },
@@ -87,6 +101,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-7',
     title: 'Market / Geography',
     question: 'In which markets will this software be distributed or used?',
+    collapsedDescription: 'What markets will this software be placed in — US (FDA), EU (MDR/IVDR), or both?',
+    determines: 'Regulatory submission pathway and applicable standards set',
     options: [
       { label: 'US + EU (global)', sub: 'FDA + MDR/IVDR + other bodies', risk: 'high' },
       { label: 'US only', sub: 'FDA applicability', risk: 'medium' },
@@ -98,6 +114,8 @@ const DIMENSIONS: AssessmentDimension[] = [
     id: 'CD-8',
     title: 'Software Safety Class',
     question: 'What is the consequence of a software failure on patient or user safety?',
+    collapsedDescription: 'Based on the above, what is the consequence of a software failure to the patient or user?',
+    determines: 'Final IEC 62304 class assignment (A = no injury, B = non-serious, C = serious/death)',
     options: [
       { label: 'Class C — Serious injury or death', sub: 'IEC 62304 highest rigor', risk: 'high' },
       { label: 'Class B — Non-serious injury', sub: 'Moderate lifecycle requirements', risk: 'medium' },
@@ -427,7 +445,7 @@ export default function ClassificationAssessment() {
                 const isActive = activeIndex === idx
                 const isDone = Boolean(a)
 
-                const statusPillClass = isDone ? riskPillClass(a!.risk) : 'bg-white/5 text-slate-300'
+                const statusPillClass = isDone ? 'bg-emerald-500/10 text-emerald-200' : 'bg-white/5 text-slate-300'
                 const leftBorderClass = isActive
                   ? 'border-violet-400/90'
                   : isDone
@@ -455,9 +473,20 @@ export default function ClassificationAssessment() {
                       <div>
                         <p className="text-[11px] uppercase tracking-wider text-slate-500">{d.id}</p>
                         <p className="mt-1 text-[13px] font-semibold text-slate-100">{d.title}</p>
+                        {!isActive && (
+                          <>
+                            <p className="mt-1 text-[13px] text-[#94a3b8] leading-5">{d.collapsedDescription}</p>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="text-[10px] uppercase tracking-wider text-slate-500">Determines:</span>
+                              <span className="rounded-full border border-white/10 bg-slate-950/35 px-2.5 py-1 text-[11px] text-indigo-200">
+                                {d.determines}
+                              </span>
+                            </div>
+                          </>
+                        )}
                       </div>
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${statusPillClass}`}>
-                        {isDone ? RISK_LABEL[a!.risk] : 'Pending'}
+                        {isDone ? 'Complete' : 'Pending'}
                       </span>
                     </div>
 
