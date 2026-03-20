@@ -191,9 +191,12 @@ type Answer = { risk: Risk; label: string; sub: string }
 
 function Radar({
   values,
+  variant = 'interactive',
 }: {
   values: number[]
+  variant?: 'interactive' | 'print'
 }) {
+  const isPrint = variant === 'print'
   const [hoveredAxis, setHoveredAxis] = useState<number | null>(null)
 
   const titleLines = (title: string) => {
@@ -202,12 +205,18 @@ function Radar({
     return normalized.split(/\s*\/\s*/g).filter(Boolean)
   }
 
-  const W = 300
-  const H = 240
+  const W = isPrint ? 200 : 300
+  const H = isPrint ? 158 : 240
   const cx = W / 2
-  const cy = H / 2 + 2
-  const r = 85
+  const cy = H / 2 + (isPrint ? 1 : 2)
+  const r = isPrint ? 54 : 85
   const n = values.length
+
+  const gridStroke = isPrint ? '#cbd5e1' : 'rgba(148,163,184,0.25)'
+  const labelFill = isPrint ? '#334155' : 'rgba(226,232,240,0.85)'
+  const labelFontSize = isPrint ? 5.5 : 8
+  const pad = isPrint ? 10 : 14
+  const edgeThreshold = isPrint ? 12 : 18
 
   const maxValue = 3
   const points = values.map((v, i) => {
@@ -222,8 +231,17 @@ function Radar({
   const profileRisk: Risk = maxAxis === 3 ? 'high' : maxAxis === 2 ? 'medium' : maxAxis === 1 ? 'low' : 'na'
   const c = riskColor(profileRisk)
 
+  const pointRadius = isPrint ? 2.8 : 3.5
+  const strokeWidth = isPrint ? 1.75 : 2
+
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/30 p-3">
+    <div
+      className={
+        isPrint
+          ? 'classification-print-radar rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm'
+          : 'rounded-2xl border border-white/10 bg-slate-950/30 p-3'
+      }
+    >
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}>
         {[0.25, 0.5, 0.75, 1].map((f, idx) => (
           <polygon
@@ -237,7 +255,7 @@ function Radar({
               })
               .join(' ')}
             fill="none"
-            stroke="rgba(148,163,184,0.25)"
+            stroke={gridStroke}
             strokeWidth="1"
           />
         ))}
@@ -246,36 +264,34 @@ function Radar({
           const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
           const x = cx + Math.cos(angle) * r
           const y = cy + Math.sin(angle) * r
-          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(148,163,184,0.25)" strokeWidth="1" />
+          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke={gridStroke} strokeWidth="1" />
         })}
 
-        <polygon points={points.join(' ')} fill={c.fill} stroke={c.stroke} strokeWidth="2" />
+        <polygon points={points.join(' ')} fill={c.fill} stroke={c.stroke} strokeWidth={strokeWidth} />
 
         {values.map((v, i) => {
           const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
           const x = cx + Math.cos(angle) * (r * (v / maxValue))
           const y = cy + Math.sin(angle) * (r * (v / maxValue))
-          return <circle key={i} cx={x} cy={y} r="3.5" fill={c.stroke} />
+          return <circle key={i} cx={x} cy={y} r={pointRadius} fill={c.stroke} />
         })}
 
         {/* axis labels */}
         {DIMENSIONS.map((d, i) => {
           const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
-          const rawX = cx + Math.cos(angle) * (r + 12)
-          const rawY = cy + Math.sin(angle) * (r + 12)
+          const labelDist = isPrint ? 8 : 12
+          const rawX = cx + Math.cos(angle) * (r + labelDist)
+          const rawY = cy + Math.sin(angle) * (r + labelDist)
 
           // Clamp to avoid clipping on the edges (textAnchor can extend beyond x).
-          const pad = 14
           const x = Math.max(pad, Math.min(W - pad, rawX))
           const y = Math.max(pad, Math.min(H - pad, rawY))
 
-          const edgeThreshold = 18
           const anchor =
             x <= edgeThreshold ? 'start' : x >= W - edgeThreshold ? 'end' : Math.abs(Math.cos(angle)) < 0.2 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end'
 
           const lines = titleLines(d.title)
-          const fontSize = 8
-          const lineHeight = fontSize * 1.1
+          const lineHeight = labelFontSize * 1.1
           const y0 = lines.length > 1 ? y - ((lines.length - 1) / 2) * lineHeight : y
 
           return (
@@ -285,11 +301,11 @@ function Radar({
               y={y0}
               textAnchor={anchor}
               dominantBaseline="middle"
-              fontSize={fontSize}
-              fill="rgba(226,232,240,0.85)"
-              style={{ cursor: 'help' }}
-              onMouseEnter={() => setHoveredAxis(i)}
-              onMouseLeave={() => setHoveredAxis(null)}
+              fontSize={labelFontSize}
+              fill={labelFill}
+              style={isPrint ? undefined : { cursor: 'help' }}
+              onMouseEnter={isPrint ? undefined : () => setHoveredAxis(i)}
+              onMouseLeave={isPrint ? undefined : () => setHoveredAxis(null)}
             >
               {lines.map((line, idx) => (
                 <tspan key={`${d.id}-${idx}`} x={x} dy={idx === 0 ? 0 : lineHeight}>
@@ -301,8 +317,8 @@ function Radar({
         })}
       </svg>
 
-      {hoveredAxis != null && (
-        <div className="mt-2 rounded-lg border border-white/10 bg-slate-950/20 p-2">
+      {!isPrint && hoveredAxis != null && (
+        <div className="mt-2 rounded-lg border border-white/10 bg-slate-950/20 p-2 print:hidden">
           <p className="text-[11px] uppercase tracking-wider text-slate-400">
             {titleLines(DIMENSIONS[hoveredAxis].title).map((line, idx) => (
               <span key={`${hoveredAxis}-t-${idx}`}>
@@ -341,6 +357,14 @@ export default function ClassificationAssessment() {
     const el = document.getElementById(`classification-step-${activeIndex}`)
     el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [activeIndex, started])
+
+  useEffect(() => {
+    const endPrint = () => {
+      document.documentElement.classList.remove('print-classification-report')
+    }
+    window.addEventListener('afterprint', endPrint)
+    return () => window.removeEventListener('afterprint', endPrint)
+  }, [])
 
   const evidence = useMemo(() => {
     if (maxScore === 3) {
@@ -391,11 +415,28 @@ export default function ClassificationAssessment() {
     }
   }
 
-  const exportPDF = () => window.print()
+  const exportPDF = () => {
+    document.documentElement.classList.add('print-classification-report')
+    window.setTimeout(() => {
+      window.print()
+    }, 120)
+  }
+
+  const scoreSummary = useMemo(() => {
+    const vals = scoreValues
+    const peak = Math.max(...vals)
+    const avg = vals.reduce((a, b) => a + b, 0) / total
+    const peakLabel = peak === 3 ? 'High' : peak === 2 ? 'Medium' : peak === 1 ? 'Low' : 'N/A'
+    return { peak, peakLabel, avg: avg.toFixed(1) }
+  }, [scoreValues, total])
+
+  const generatedAt = useMemo(() => new Date().toLocaleString(undefined, { dateStyle: 'long', timeStyle: 'short' }), [])
 
   return (
-    <div className="space-y-4">
-      <SectionTitle title="Software Classification Assessment" subtitle="Eight assessment dimensions determine regulatory applicability, evidence depth, and SDLC rigor." />
+    <div className="classification-print-root space-y-4 print:space-y-0 print:text-slate-900">
+      <div className="print:hidden">
+        <SectionTitle title="Software Classification Assessment" subtitle="Eight assessment dimensions determine regulatory applicability, evidence depth, and SDLC rigor." />
+      </div>
 
       {!started && (
         <Card className="bg-gradient-to-br from-violet-500/10 to-slate-950/40">
@@ -416,8 +457,90 @@ export default function ClassificationAssessment() {
         </Card>
       )}
 
+      {started && done === total && (
+        <div className="classification-print-exec hidden print:block print:text-[10px] print:leading-snug">
+          <div className="flex flex-wrap items-end justify-between gap-2 border-b border-slate-300 pb-2">
+            <div>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">Software Compliance Portal · Executive summary</p>
+              <h1 className="mt-0.5 text-base font-bold tracking-tight text-slate-900">Classification assessment</h1>
+            </div>
+            <p className="text-[9px] text-slate-500">{generatedAt}</p>
+          </div>
+
+          <div className="mt-2 grid gap-2 print:grid-cols-3 print:items-start">
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">Outcome</p>
+              <p className="mt-0.5 text-[11px] font-semibold text-slate-900">
+                {lane.subtitle} — {lane.label} profile
+              </p>
+              <p className="mt-0.5 text-[10px] text-slate-700 leading-snug">
+                Peak dimension risk: <span className="font-medium">{scoreSummary.peakLabel}</span> · Mean score:{' '}
+                <span className="font-medium">{scoreSummary.avg}</span> / 3 · All eight dimensions completed in-session.
+              </p>
+            </div>
+            <div className="flex min-w-0 flex-col items-center justify-self-center print:max-w-[178px]">
+              <p className="w-full text-center text-[8px] font-semibold uppercase tracking-wider text-slate-500">Risk profile</p>
+              <p className="mt-0.5 w-full text-center text-[7px] leading-tight text-slate-500">Axes: eight dimensions · Scale N/A=0 → High=3 (color reflects peak exposure)</p>
+              <div className="mt-1 w-full">
+                <Radar variant="print" values={scoreValues} />
+              </div>
+            </div>
+            <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1.5">
+              <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">Next focus</p>
+              <p className="mt-0.5 text-[10px] leading-snug text-slate-800">
+                Prioritize the evidence pack aligned to {lane.subtitle}; extend detail in controlled design records as needed.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">Dimension decisions</p>
+            <table className="mt-0.5 w-full border-collapse text-left text-[8px] text-slate-900">
+              <thead>
+                <tr className="border-b border-slate-400 text-[8px] uppercase tracking-wide text-slate-600">
+                  <th className="py-1 pr-2 font-semibold">ID</th>
+                  <th className="py-1 pr-2 font-semibold">Dimension</th>
+                  <th className="py-1 pr-2 font-semibold">Decision</th>
+                  <th className="py-1 font-semibold">Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DIMENSIONS.map((d, i) => {
+                  const a = answers[i]
+                  return (
+                    <tr key={d.id} className="border-b border-slate-200">
+                      <td className="py-0.5 pr-2 align-top font-mono text-slate-700">{d.id}</td>
+                      <td className="py-0.5 pr-2 align-top text-slate-800">{d.title}</td>
+                      <td className="py-0.5 pr-2 align-top">{a.label}</td>
+                      <td className="py-0.5 align-top font-medium">{RISK_LABEL[a.risk]}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="mt-2">
+            <p className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">Recommended evidence (indicative)</p>
+            <ul className="mt-0.5 columns-2 gap-4 text-[8px] text-slate-800 [column-fill:_balance]">
+              {evidence.map((e) => (
+                <li key={e} className="mb-0.5 break-inside-avoid pl-0 leading-tight">
+                  <span className="text-emerald-700">✓ </span>
+                  {e}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="mt-2 border-t border-slate-200 pt-1.5 text-[7px] leading-normal text-slate-500">
+            Indicative only — not legal or regulatory advice. Confirm classification, labeling, and submissions with qualified regulatory and legal reviewers;
+            retain with design history / risk file cross-references. Confidential — client advisory use.
+          </p>
+        </div>
+      )}
+
       {started && (
-        <div className="grid gap-3 lg:grid-cols-[60%_40%] items-start">
+        <div className="grid items-start gap-3 lg:grid-cols-[60%_40%] print:hidden">
           <div className="space-y-4">
             <Card className="bg-white/5 backdrop-blur">
               <div className="flex items-center gap-4 flex-wrap">
@@ -492,11 +615,15 @@ export default function ClassificationAssessment() {
 
                     <div
                       className="overflow-hidden transition-[max-height] duration-200 ease-out"
-                      style={{ maxHeight: isActive ? 980 : 0 }}
+                      style={{ maxHeight: isActive ? 2000 : 0 }}
                       aria-hidden={!isActive}
                     >
                       <div className="pt-4">
                         <p className="text-[13px] text-slate-300 leading-5">{d.question}</p>
+                        <div className="mt-2">
+                          <span className="text-[10px] uppercase tracking-wider text-slate-500">Determines:</span>{' '}
+                          <span className="text-[12px] text-slate-400">{d.determines}</span>
+                        </div>
                         <div className="mt-4 space-y-2">
                           {d.options.map((opt, j) => {
                             const selected = answers[idx]?.risk === opt.risk
@@ -543,7 +670,7 @@ export default function ClassificationAssessment() {
             </div>
           </div>
 
-          <div className="space-y-4 sticky top-0">
+          <div className="sticky top-0 space-y-4">
             <div>
               <p className="text-[11px] uppercase tracking-wider text-slate-400">Lane assignment</p>
               <h3 className="mt-1 text-[13px] font-semibold text-slate-50">{lane.subtitle}</h3>
@@ -607,7 +734,7 @@ export default function ClassificationAssessment() {
                   : 'border-white/10 bg-transparent text-slate-300 opacity-60 cursor-not-allowed hover:bg-white/5',
               ].join(' ')}
             >
-              Export Assessment PDF
+              Export 1-page executive summary (PDF)
             </button>
           </div>
         </div>

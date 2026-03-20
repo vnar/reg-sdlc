@@ -164,13 +164,43 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
 
   const intensityLevel = (id: Lane['id']) => (id === 'A' ? 1 : id === 'B' ? 2 : id === 'C' ? 3 : 4)
 
+  const intensityByLane: Record<
+    Lane['id'],
+    {
+      approval: { dots: number; value: string }
+      evidence: { dots: number; value: string }
+      rigor: { dots: number; value: string }
+    }
+  > = {
+    A: {
+      approval: { dots: 1, value: 'Engineering only' },
+      evidence: { dots: 1, value: 'Lightweight' },
+      rigor: { dots: 1, value: 'Foundational' },
+    },
+    B: {
+      approval: { dots: 2, value: 'Eng + QA + RA' },
+      evidence: { dots: 2, value: 'Moderate' },
+      rigor: { dots: 2, value: 'Controlled' },
+    },
+    C: {
+      approval: { dots: 3, value: 'Cross-functional' },
+      evidence: { dots: 4, value: 'Comprehensive' },
+      rigor: { dots: 3, value: 'High' },
+    },
+    D: {
+      approval: { dots: 4, value: 'Formal governance' },
+      evidence: { dots: 4, value: 'Submission-grade' },
+      rigor: { dots: 4, value: 'Maximum' },
+    },
+  }
+
   const dotBar = (filled: number, color: string) => (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-[3px]">
       {[1, 2, 3, 4].map((n) => (
         <span
           key={n}
-          className="inline-flex h-2.5 w-2.5 rounded-full border border-white/10"
-          style={{ backgroundColor: n <= filled ? color : 'rgba(148,163,184,0.15)' }}
+          className="inline-flex h-[7px] w-[7px] rounded-full"
+          style={{ backgroundColor: n <= filled ? color : `${color}2e` }}
         />
       ))}
     </div>
@@ -261,63 +291,65 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
         </div>
 
         {/* SECTION 2 — Four lane cards */}
-        <div className="mt-5 grid gap-3 lg:grid-cols-4">
+        <div className="mt-5 grid gap-3 lg:grid-cols-4 lg:items-stretch">
           {lanes.map((lane) => {
             const c = laneColor(lane.id)
-            const fill = intensityLevel(lane.id)
             const triggerTags = lane.triggers
 
             return (
               <div
                 key={lane.id}
-                className="rounded-2xl border border-white/10 bg-slate-900/45 p-4"
+                className="flex h-full flex-col rounded-2xl border border-white/10 bg-slate-900/45 p-4"
                 style={{ borderTopColor: c, borderTopWidth: 3, borderTopStyle: 'solid' }}
               >
                 {/* 1. Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-400">Lane {lane.id}</p>
-                    <p className="mt-1 text-xl font-semibold text-slate-100">{lane.subtitle}</p>
+                <div className="flex min-h-[66px] items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-400">Lane {lane.id}</p>
+                    <p className="mt-1 text-[16px] font-extrabold tracking-[-0.01em] text-slate-100">{lane.subtitle}</p>
                   </div>
                   <span
-                    className="rounded-full border px-2.5 py-1 text-xs font-semibold"
+                    className="shrink-0 rounded-[4px] border px-2 py-[2px] text-[10px] font-semibold"
                     style={{ borderColor: `${c}66`, color: c, backgroundColor: `${c}1A` }}
                   >
                     {lane.lifecycleRigor}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-slate-300">{laneDesc(lane)}</p>
+                <p className="mt-2 min-h-[56px] text-[11px] leading-[1.5] text-slate-400">{laneDesc(lane)}</p>
 
                 {/* 2. Intensity meter */}
-                <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/35 p-3">
+                <div className="mt-3 min-h-[116px] rounded-[8px] border border-white/10 bg-[rgba(11,15,26,0.5)] px-3 py-2.5">
                   {[
-                    ['Approval', lane.approvalIntensity],
-                    ['Evidence', lane.evidenceDepth],
-                    ['Rigor', lane.lifecycleRigor],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex items-center justify-between gap-2 py-1">
-                      <span className="text-xs text-slate-400">{label}</span>
-                      {dotBar(fill, c)}
-                      <span className="text-xs text-slate-200">{value}</span>
+                    ['APPROVAL', intensityByLane[lane.id].approval.dots, intensityByLane[lane.id].approval.value],
+                    ['EVIDENCE', intensityByLane[lane.id].evidence.dots, intensityByLane[lane.id].evidence.value],
+                    ['RIGOR', intensityByLane[lane.id].rigor.dots, intensityByLane[lane.id].rigor.value],
+                  ].map(([label, dots, value]) => (
+                    <div key={String(label)} className="grid grid-cols-[52px_auto_1fr] items-center gap-x-2 py-[3px]">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-500">{label}</span>
+                      {dotBar(Number(dots), c)}
+                      <span className="truncate text-right text-[10px] font-semibold text-slate-300">{String(value)}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* 3. Controls Required */}
-                <div className="mt-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Controls required</p>
-                  <ul className="mt-2 list-disc pl-5 space-y-1 text-sm text-slate-300">
+                <div className="mt-3 min-h-[132px]">
+                  <p className="mb-[7px] text-[9px] uppercase tracking-[0.1em] text-slate-500">Controls required</p>
+                  <ul className="space-y-1 text-[11px] text-slate-300">
                     {lane.controlsRequired.map((control) => (
-                      <li key={control}>{control}</li>
+                      <li key={control} className="flex items-start gap-2">
+                        <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: `${c}80` }} />
+                        <span>{control}</span>
+                      </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* 4. Example Software */}
-                <div className="mt-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Example software</p>
+                <div className="mt-3 min-h-[66px]">
+                  <p className="mb-[7px] text-[9px] uppercase tracking-[0.1em] text-slate-500">Example software</p>
                   <span
-                    className="mt-2 inline-flex rounded-lg border px-2.5 py-1 text-xs italic"
+                    className="inline-flex rounded-full border px-2.5 py-1 text-[10px] italic"
                     style={{ borderColor: `${c}55`, color: c, backgroundColor: `${c}14` }}
                   >
                     {lane.examples[0]}
@@ -325,11 +357,11 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
                 </div>
 
                 {/* 5. Classification Triggers */}
-                <div className="mt-3">
-                  <p className="text-xs uppercase tracking-wider text-slate-500">Classification triggers</p>
+                <div className="mt-3 mt-auto min-h-[88px]">
+                  <p className="mb-[7px] text-[9px] uppercase tracking-[0.1em] text-slate-500">Classification triggers</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {triggerTags.map((t) => (
-                      <span key={t} className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-slate-400">
+                      <span key={t} className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-slate-400">
                         {t}
                       </span>
                     ))}
@@ -1021,21 +1053,21 @@ export function ApprovalFlow({ tiers }: { tiers: RiskTier[] }) {
             return (
             <div
               key={t.id}
-              className="group relative rounded-2xl border border-white/10 bg-slate-900/55 p-3.5 transition-all duration-200 hover:border-white/20 hover:bg-slate-900/70 hover:-translate-y-0.5"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/55 p-3.5 transition-all duration-200 hover:border-white/20 hover:bg-slate-900/70 hover:-translate-y-0.5"
               style={{ borderTopColor: ui.borderTop, borderTopWidth: 3, borderTopStyle: 'solid' }}
             >
               <div
                 className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 blur-2xl transition-opacity duration-200 group-hover:opacity-100"
                 style={{ background: idx === 0 ? 'rgba(52,211,153,0.08)' : idx === 1 ? 'rgba(245,158,11,0.08)' : 'rgba(251,113,133,0.08)' }}
               />
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-start justify-between gap-2.5">
+                <div className="min-w-0">
                   <p className={`text-[10px] uppercase tracking-wider ${ui.label}`}>Risk tier {idx + 1}</p>
-                  <p className="mt-1 text-lg font-semibold leading-tight text-slate-100">{t.name}</p>
+                  <p className="mt-1 text-base font-semibold leading-tight text-slate-100 sm:text-lg">{t.name}</p>
                 </div>
-                <div className={`flex h-12 w-12 flex-col items-center justify-center rounded-lg border ${ui.bubble}`}>
-                  <span className="text-xl font-semibold leading-none">{t.requiredApprovers.length}</span>
-                  <span className="mt-0.5 text-[9px] uppercase tracking-wider">Approvers</span>
+                <div className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border sm:h-12 sm:w-12 ${ui.bubble}`}>
+                  <span className="text-lg font-semibold leading-none sm:text-xl">{t.requiredApprovers.length}</span>
+                  <span className="mt-0.5 max-w-full px-0.5 text-center text-[7px] font-medium leading-none sm:text-[8px]">Approvers</span>
                 </div>
               </div>
               <p className="mt-2 text-sm leading-5 text-slate-300">{t.description}</p>

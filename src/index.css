@@ -30,3 +30,57 @@ body {
   background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
 }
+
+/* Classification assessment — client-grade PDF / print output */
+@media print {
+  @page {
+    margin: 8mm 10mm;
+    size: A4 portrait;
+  }
+
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .portal-bg {
+    background: #fff !important;
+  }
+
+  /* Only when export is triggered from Classification (class set in JS before print) */
+  html.print-classification-report .app-sidebar {
+    display: none !important;
+  }
+
+  html.print-classification-report .app-main-chrome {
+    display: none !important;
+  }
+
+  html.print-classification-report .app-main-area {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  html.print-classification-report .classification-print-root {
+    color: #0f172a;
+  }
+
+  /* Single-page executive summary — suppress extra page breaks */
+  html.print-classification-report .classification-print-exec {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Radar on summary: keep polygon fill/stroke colors on paper */
+  html.print-classification-report .classification-print-radar,
+  html.print-classification-report .classification-print-radar svg,
+  html.print-classification-report .classification-print-radar svg * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+}

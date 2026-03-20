@@ -92,14 +92,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         <button
           aria-label="Close navigation"
           onClick={() => setMobileNavOpen(false)}
-          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-sm lg:hidden print:hidden"
         />
       ) : null}
 
       <div className="mx-auto flex min-h-screen max-w-[1800px]">
         <aside
           className={clsx(
-            'fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
+            'app-sidebar fixed inset-y-0 left-0 z-50 border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',
             'w-[300px]',
             sidebarCollapsed ? 'lg:w-20' : 'lg:w-[300px]',
             mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
@@ -147,8 +147,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 p-4 md:p-6">
-          <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur">
+        <main className="app-main-area min-w-0 flex-1 p-4 md:p-6">
+          <div className="app-main-chrome mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-slate-900/60 px-4 py-3 backdrop-blur print:hidden">
             <div className="flex items-center gap-2">
               <button
                 className="rounded-lg border border-white/10 p-1.5 text-slate-300 transition hover:border-white/20 hover:bg-white/5 hover:text-slate-100 lg:hidden"
