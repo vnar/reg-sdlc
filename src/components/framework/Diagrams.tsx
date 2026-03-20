@@ -1737,24 +1737,24 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
   ] as const
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 p-6 shadow-[0_22px_80px_rgba(8,12,24,0.55)]" style={{ backgroundColor: '#0b0f1a' }}>
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute -left-10 top-8 h-72 w-72 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.15)' }} />
-        <div className="absolute right-0 top-0 h-72 w-72 rounded-full blur-3xl" style={{ background: 'rgba(168,85,247,0.12)' }} />
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 p-5 shadow-[0_18px_60px_rgba(8,12,24,0.45)]" style={{ backgroundColor: '#0b0f1a' }}>
+      <div className="pointer-events-none absolute inset-0 opacity-75">
+        <div className="absolute -left-10 top-8 h-64 w-64 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.12)' }} />
+        <div className="absolute right-0 top-0 h-64 w-64 rounded-full blur-3xl" style={{ background: 'rgba(168,85,247,0.1)' }} />
       </div>
 
       <div className="relative">
         <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Guardrails & Paved Roads</p>
 
         {/* 1. Hero section */}
-        <div className="mt-3 grid gap-4 lg:grid-cols-[1.2fr_1fr_1fr]">
+        <div className="mt-3 grid gap-4 lg:grid-cols-[1.15fr_0.95fr_0.95fr] lg:items-stretch">
           <div>
-            <h3 className="text-4xl font-semibold leading-tight tracking-tight text-white">Compliance built into delivery — not bolted on</h3>
-            <p className="mt-3 text-sm text-slate-300">
+            <h3 className="text-3xl font-semibold leading-tight tracking-tight text-white lg:text-[34px]">Compliance built into delivery — not bolted on</h3>
+            <p className="mt-2 text-[13px] leading-6 text-slate-300">
               Three execution tracks inject reusable, evidence-aware controls across every lifecycle phase.
               These controls prevent avoidable violations, speed delivery, and produce audit-ready proof as delivery work happens.
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-indigo-400/30 bg-indigo-500/12 px-3 py-1 text-xs text-indigo-200">
                 3 execution tracks
               </span>
@@ -1767,9 +1767,9 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" style={{ backgroundColor: '#131929' }}>
+          <div className="rounded-2xl border border-white/10 p-4 shadow-[0_6px_22px_rgba(0,0,0,0.22)]" style={{ backgroundColor: '#131929' }}>
             <p className="text-xs uppercase tracking-wider text-slate-400">Why this matters</p>
-            <div className="mt-3 space-y-3 text-sm text-slate-300">
+            <div className="mt-3 space-y-2.5 text-[13px] leading-5 text-slate-300">
               <div className="flex items-start gap-2">
                 <Rocket size={15} className="mt-0.5 text-indigo-300" />
                 <p><span className="font-medium text-slate-100">Paved Roads -&gt; Velocity:</span> Pre-approved templates, starter kits, and workflows eliminate rework.</p>
@@ -1785,9 +1785,9 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
             </div>
           </div>
 
-          <div className="rounded-2xl border border-indigo-400/25 p-4 shadow-[0_8px_30px_rgba(0,0,0,0.25)]" style={{ backgroundColor: '#131929' }}>
+          <div className="rounded-2xl border border-indigo-400/25 p-4 shadow-[0_6px_22px_rgba(0,0,0,0.22)]" style={{ backgroundColor: '#131929' }}>
             <p className="text-xs uppercase tracking-wider text-indigo-200">Operating principle</p>
-            <div className="mt-3 space-y-3 text-sm text-slate-300">
+            <div className="mt-3 space-y-2.5 text-[13px] leading-5 text-slate-300">
               <p>
                 <span className="font-medium text-slate-100">Controls are infrastructure:</span> Each track is a set of engineering patterns. They plug into the SDLC automatically or with defined human checkpoints.
               </p>
@@ -1799,17 +1799,19 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
         </div>
 
         {/* 2. Legend strip */}
-        <div className="mt-5 rounded-2xl border border-white/10 p-4 shadow-[0_10px_34px_rgba(0,0,0,0.28)]" style={{ backgroundColor: '#131929' }}>
+        <div className="mt-4 rounded-2xl border border-white/10 p-4 shadow-[0_8px_28px_rgba(0,0,0,0.24)]" style={{ backgroundColor: '#131929' }}>
           <div className="grid gap-4 lg:grid-cols-2">
             <div>
               <p className="text-xs uppercase tracking-wider text-slate-400">Execution tracks</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {trackMeta.map((t) => (
-                  <span key={t.key} className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs" style={{ borderColor: `${t.color}66`, color: t.color, backgroundColor: `${t.color}12` }}>
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
-                    {t.key}
-                  </span>
-                ))}
+              <div className="mt-2 rounded-2xl border border-white/10 bg-[#0c1220] p-2">
+                <div className="flex flex-wrap gap-2">
+                  {trackMeta.map((t) => (
+                    <span key={t.key} className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs" style={{ borderColor: `${t.color}66`, color: t.color, backgroundColor: `${t.color}12` }}>
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
+                      {t.key}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
             <div>
@@ -1827,7 +1829,7 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
         </div>
 
         {/* 3. Phase x Track matrix */}
-        <div className="mt-5 overflow-auto rounded-2xl border border-white/10 shadow-[0_10px_34px_rgba(0,0,0,0.28)]" style={{ backgroundColor: '#131929' }}>
+        <div className="mt-4 overflow-auto rounded-2xl border border-white/10 shadow-[0_8px_28px_rgba(0,0,0,0.24)]" style={{ backgroundColor: '#131929' }}>
           <table className="w-full min-w-[1120px] text-left">
             <thead>
               <tr className="border-b border-white/10 bg-white/[0.02]">
@@ -1845,7 +1847,7 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
             </thead>
             <tbody>
               {phaseRows.map((row, idx) => (
-                <tr key={row.id} className="align-top border-b border-white/10 last:border-b-0" style={{ backgroundColor: idx % 2 === 0 ? '#131929' : '#0f1626' }}>
+                <tr key={row.id} className="align-top border-b border-white/10 last:border-b-0" style={{ backgroundColor: idx % 2 === 0 ? '#131929' : '#111a2b' }}>
                   <td className="px-4 py-3">
                     <span className="inline-flex rounded-md border border-indigo-400/30 bg-indigo-500/12 px-2 py-0.5 font-mono text-xs text-indigo-200">{row.id}</span>
                     <p className="mt-1 text-sm font-medium text-slate-100">{row.name}</p>
@@ -1861,8 +1863,8 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
                             {controls.map((c, i) => (
                               <div
                                 key={`${row.id}-${t.key}-${i}`}
-                                className="rounded-lg border border-white/10 p-2.5 transition-all duration-150 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-[0_8px_24px_rgba(0,0,0,0.32)]"
-                                style={{ backgroundColor: '#0b0f1a' }}
+                                className="rounded-lg border border-white/10 p-2.5 transition-all duration-150 hover:border-white/20 hover:shadow-[0_6px_18px_rgba(0,0,0,0.28)]"
+                                style={{ backgroundColor: '#0c1220' }}
                               >
                                 <span
                                   className="inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
@@ -1874,7 +1876,7 @@ export function GuardrailsTracks({ patterns }: { patterns: GuardrailPattern[] })
                                 >
                                   {c.type}
                                 </span>
-                                <p className="mt-1.5 text-sm text-slate-200">{c.text}</p>
+                                <p className="mt-1.5 text-[13px] leading-5 text-slate-200">{c.text}</p>
                               </div>
                             ))}
                           </div>
