@@ -402,6 +402,39 @@ function AIFlowStrip({ narrative }: { narrative: string }) {
   )
 }
 
+function NarrativeSection({
+  label,
+  color,
+  children,
+  tinted = false,
+}: {
+  label: string
+  color: string
+  children: ReactNode
+  tinted?: boolean
+}) {
+  return (
+    <section
+      className="pt-5"
+      style={{
+        borderTop: `1px solid ${color}55`,
+        backgroundColor: tinted ? 'rgba(109,40,217,0.06)' : 'transparent',
+        borderRadius: tinted ? 10 : 0,
+        paddingInline: tinted ? 12 : 0,
+        paddingBottom: tinted ? 12 : 0,
+      }}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <span className="h-4 w-1 rounded-full" style={{ backgroundColor: color }} />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color }}>
+          {label}
+        </p>
+      </div>
+      {children}
+    </section>
+  )
+}
+
 function UseCaseTemplateCard({
   useCase,
   accent,
@@ -449,40 +482,49 @@ function UseCaseTemplateCard({
         </button>
 
         {expanded ? (
-          <div className="mt-4">
+          <div className="mt-4 space-y-1">
             <table className="w-full border-collapse text-left">
               <tbody>
                 <FieldTableRow label="Use Case ID" value={<span className="font-mono text-slate-100">{useCase.id}</span>} />
                 <FieldTableRow label="Title" value={<span className="text-slate-200">{useCase.title}</span>} />
                 <FieldTableRow label="Lane" value={<span className="text-slate-200">{useCase.lane}</span>} />
                 <FieldTableRow label="Applicable Standards" value={listValue(useCase.standards)} />
-                <FieldTableRow label="Problem Statement" value={<span className="text-slate-200">{useCase.problemStatement}</span>} />
-                <FieldTableRow label="Current State" value={listValue(useCase.currentState)} />
-                <FieldTableRow label="AI Enablement" value={listValue(useCase.aiEnablement)} />
-                <FieldTableRow label="Future State" value={<span className="text-slate-200">{useCase.futureState}</span>} />
-                <FieldTableRow
-                  label="Business Value"
-                  value={
-                    <div className="flex flex-wrap gap-2">
-                      {useCase.businessValue.map((metric) => (
-                        <span key={metric} className="max-w-full break-words whitespace-normal rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
-                          {metric}
-                        </span>
-                      ))}
-                    </div>
-                  }
-                />
-                <FieldTableRow
-                  label="Recommended Visual"
-                  value={
-                    <div className="space-y-2">
-                      <p className="text-slate-200">{useCase.recommendedVisual}</p>
-                      <AIFlowStrip narrative={useCase.recommendedVisual} />
-                    </div>
-                  }
-                />
               </tbody>
             </table>
+
+            <NarrativeSection label="Problem Statement" color="#e11d48">
+              <p className="text-sm text-slate-200">{useCase.problemStatement}</p>
+            </NarrativeSection>
+
+            <NarrativeSection label="Current State" color="#d97706">
+              <div className="text-slate-200">{listValue(useCase.currentState)}</div>
+            </NarrativeSection>
+
+            <NarrativeSection label="AI Enablement" color="#6d28d9" tinted>
+              <div className="text-slate-200">{listValue(useCase.aiEnablement)}</div>
+            </NarrativeSection>
+
+            <NarrativeSection label="Future State" color="#0d9488">
+              <p className="text-sm text-slate-200">{useCase.futureState}</p>
+            </NarrativeSection>
+
+            <NarrativeSection label="Business Value" color="#3b4bc8">
+              <div className="flex flex-wrap gap-2">
+                {useCase.businessValue.map((metric) => (
+                  <span key={metric} className="max-w-full break-words whitespace-normal rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                    {metric}
+                  </span>
+                ))}
+              </div>
+            </NarrativeSection>
+
+            <section className="pt-5">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Recommended Visual</p>
+              <div className="space-y-2">
+                <p className="text-slate-200">{useCase.recommendedVisual}</p>
+                <AIFlowStrip narrative={useCase.recommendedVisual} />
+              </div>
+            </section>
           </div>
         ) : null}
       </div>

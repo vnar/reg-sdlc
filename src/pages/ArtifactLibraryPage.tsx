@@ -988,6 +988,7 @@ function ArtifactTemplateCard({
 
 export default function ArtifactLibraryPage() {
   const [pathAIExampleMode, setPathAIExampleMode] = useState(false)
+  const firstArtifactId = ARTIFACT_GROUPS[0]?.artifacts[0]?.id ?? ''
   const initialExpandedGroups: Record<ArtifactGroupId, boolean> = {
     g1: true,
     g2: false,
@@ -999,7 +1000,7 @@ export default function ArtifactLibraryPage() {
   }
 
   const [expandedGroups, setExpandedGroups] = useState<Record<ArtifactGroupId, boolean>>(initialExpandedGroups)
-  const [selectedArtifactId, setSelectedArtifactId] = useState<string | null>(null)
+  const [selectedArtifactId, setSelectedArtifactId] = useState<string>(firstArtifactId)
   const [examplePanelOpen, setExamplePanelOpen] = useState(true)
 
   const groupById = useMemo(() => {
@@ -1014,7 +1015,7 @@ export default function ArtifactLibraryPage() {
     return map
   }, [])
 
-  const selectedArtifact = selectedArtifactId ? artifactById[selectedArtifactId] : null
+  const selectedArtifact = artifactById[selectedArtifactId] ?? null
   const selectedGroup = selectedArtifact ? groupById[selectedArtifact.groupId] : null
   const selectedPhaseLabel = selectedArtifact ? selectedArtifact.phaseTag ?? inferPhaseLabel(selectedArtifact.trigger) : null
   const selectedExampleData = selectedArtifact ? selectedArtifact.pathAIExample ?? buildFallbackExample(selectedArtifact) : null
@@ -1157,7 +1158,7 @@ export default function ArtifactLibraryPage() {
                             <button
                               key={a.id}
                               type="button"
-                              onClick={() => setSelectedArtifactId((cur) => (cur === a.id ? null : a.id))}
+                              onClick={() => setSelectedArtifactId(a.id)}
                               data-al-artifact-id={a.id}
                               className={[
                                 'w-full rounded-lg border px-3 py-2 text-left transition',
@@ -1222,7 +1223,7 @@ export default function ArtifactLibraryPage() {
                     artifact={selectedArtifact}
                     accent={selectedGroup?.accent ?? '#64748b'}
                     expanded={true}
-                    onToggle={() => setSelectedArtifactId(null)}
+                    onToggle={() => setSelectedArtifactId(selectedArtifact.id)}
                   />
 
                   {pathAIExampleMode && selectedExampleData && examplePanelOpen ? (
@@ -1324,17 +1325,7 @@ export default function ArtifactLibraryPage() {
                   </button>
                 ) : null}
               </div>
-            ) : (
-              <div className="rounded-2xl border border-white/10 bg-slate-900/30 p-6">
-                <p className="text-xs uppercase tracking-wider text-slate-400">Template Overview</p>
-                <h2 className="mt-2 text-lg font-semibold text-slate-100">Select an artifact template</h2>
-                <p className="mt-2 text-sm text-slate-300 leading-6">
-                  Artifact templates are organized by group and are accessible through the tree explorer.
-                  Each template includes: Purpose, Trigger, Owner / RACI, Required Inputs, Core Sections, Review Frequency, Traceability Links, and AI Assist Opportunity.
-                  Toggle PathAI Reporter Example to preview pre-populated content.
-                </p>
-              </div>
-            )}
+            ) : null}
           </main>
         </div>
       </section>

@@ -609,7 +609,7 @@ export default function ClassificationAssessment() {
                         )}
                       </div>
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-medium ${statusPillClass}`}>
-                        {isDone ? 'Complete' : 'Pending'}
+                        {isDone ? 'Complete' : 'Tap to assess'}
                       </span>
                     </div>
 

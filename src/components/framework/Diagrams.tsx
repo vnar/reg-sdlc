@@ -11,7 +11,7 @@ import type {
   RiskTier,
   ClassificationDimension,
 } from '../../types/framework'
-import { Fragment, useCallback, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { clsx } from 'clsx'
 import { ArrowRight, Briefcase, CheckSquare, Cog, FlaskConical, Landmark, Lock, Monitor, Rocket, Scale, ShieldCheck, TriangleAlert } from 'lucide-react'
 
@@ -207,6 +207,43 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
   )
 
   const laneById = (id: Lane['id']) => lanes.find((l) => l.id === id)!
+  const [activeLaneId, setActiveLaneId] = useState<Lane['id']>(lanes[0]?.id ?? 'A')
+  const laneCardRefs = useRef<Record<Lane['id'], HTMLDivElement | null>>({
+    A: null,
+    B: null,
+    C: null,
+    D: null,
+  })
+
+  useEffect(() => {
+    const visibility = new Map<Lane['id'], number>()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const laneId = (entry.target as HTMLElement).dataset.laneId as Lane['id']
+          visibility.set(laneId, entry.isIntersecting ? entry.intersectionRatio : 0)
+        }
+        let best: Lane['id'] | null = null
+        let bestRatio = -1
+        for (const lane of lanes) {
+          const ratio = visibility.get(lane.id) ?? 0
+          if (ratio > bestRatio) {
+            bestRatio = ratio
+            best = lane.id
+          }
+        }
+        if (best) setActiveLaneId(best)
+      },
+      { threshold: [0.2, 0.4, 0.6, 0.8] }
+    )
+
+    for (const lane of lanes) {
+      const node = laneCardRefs.current[lane.id]
+      if (node) observer.observe(node)
+    }
+
+    return () => observer.disconnect()
+  }, [lanes])
 
   const matrixRows = [
     {
@@ -261,12 +298,19 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
               className="mt-[18px] h-[2px] flex-1 rounded-full"
               style={{ background: `linear-gradient(90deg, rgba(100,116,139,0.1) 0%, ${laneColor('A')} 100%)` }}
             />
-            {lanes.map((lane, idx) => (
+            {lanes.map((lane, idx) => {
+              const isActive = lane.id === activeLaneId
+              const isLeftFilled = idx <= lanes.findIndex((l) => l.id === activeLaneId)
+              return (
               <div key={lane.id} className="flex items-start flex-1 min-w-0">
                 <div className="w-full min-w-[92px] text-center">
                   <div
                     className="mx-auto flex h-9 w-9 items-center justify-center rounded-md border font-semibold"
-                    style={{ borderColor: `${laneColor(lane.id)}99`, backgroundColor: `${laneColor(lane.id)}22`, color: laneColor(lane.id) }}
+                    style={{
+                      borderColor: `${laneColor(lane.id)}99`,
+                      backgroundColor: isActive ? laneColor(lane.id) : `${laneColor(lane.id)}14`,
+                      color: isActive ? '#f8fafc' : laneColor(lane.id),
+                    }}
                   >
                     {lane.id}
                   </div>
@@ -277,12 +321,14 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
                   <div
                     className="mx-2 mt-[18px] h-[2px] flex-1 rounded-full"
                     style={{
-                      background: `linear-gradient(90deg, ${laneColor(lane.id)} 0%, ${laneColor(lanes[idx + 1].id)} 100%)`,
+                      background: isLeftFilled
+                        ? `linear-gradient(90deg, ${laneColor(activeLaneId)} 0%, ${laneColor(activeLaneId)} 100%)`
+                        : 'linear-gradient(90deg, rgba(148,163,184,0.2) 0%, rgba(148,163,184,0.2) 100%)',
                     }}
                   />
                 )}
               </div>
-            ))}
+            )})}
             <div
               className="mt-[18px] h-[2px] flex-1 rounded-full"
               style={{ background: `linear-gradient(90deg, ${laneColor('D')} 0%, rgba(139,92,246,0.1) 100%)` }}
@@ -299,6 +345,10 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
             return (
               <div
                 key={lane.id}
+                data-lane-id={lane.id}
+                ref={(el) => {
+                  laneCardRefs.current[lane.id] = el
+                }}
                 className="flex h-full flex-col rounded-2xl border border-white/10 bg-slate-900/45 p-4"
                 style={{ borderTopColor: c, borderTopWidth: 3, borderTopStyle: 'solid' }}
               >

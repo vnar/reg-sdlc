@@ -117,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className={clsx('flex', sidebarCollapsed ? 'justify-center' : 'items-start justify-between gap-2')}>
               {!sidebarCollapsed ? (
                 <div>
-                  <p className="text-lg font-bold tracking-tight text-indigo-300">Codex</p>
+                  <p className="text-lg font-bold tracking-tight text-indigo-300">CODEX</p>
                   <p className="mt-0.5 text-[10px] font-normal tracking-[0.04em] text-slate-400">Regulated Software Compliance Framework</p>
                   <p className="mt-1 text-[9px] uppercase tracking-[0.08em] text-slate-500">Last published 20 Mar 2026</p>
                 </div>
@@ -184,7 +184,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 {sidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
               </button>
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">Codex</p>
+              <div>
+                <p className="text-base font-bold tracking-tight text-indigo-300">Codex</p>
+                <p className="text-[10px] font-normal tracking-[0.04em] text-slate-400">Regulated Software Compliance Framework</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {mobileNavOpen ? (
