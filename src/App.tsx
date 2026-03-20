@@ -13,6 +13,7 @@ const ApprovalMatrixPage = lazy(() => import('./pages/FrameworkPages').then((m) 
 const GuardrailsPavedRoadsPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.GuardrailsPavedRoadsPage })))
 const TraceabilityStudioPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.TraceabilityStudioPage })))
 const ComplianceRiskHotspotsPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.ComplianceRiskHotspotsPage })))
+const ArtifactLibraryPage = lazy(() => import('./pages/ArtifactLibraryPage'))
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/guardrails-paved-roads" element={<GuardrailsPavedRoadsPage />} />
           <Route path="/traceability-studio" element={<TraceabilityStudioPage />} />
           <Route path="/compliance-risk-hotspots" element={<ComplianceRiskHotspotsPage />} />
+          <Route path="/artifact-library" element={<ArtifactLibraryPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

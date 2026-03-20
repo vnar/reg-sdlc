@@ -14,6 +14,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   X,
+  Archive,
 } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState, type ReactNode } from 'react'
@@ -38,7 +39,9 @@ const operatingModelNavItems = [
   { to: '/guardrails-paved-roads', label: 'Guardrails & Paved Roads', icon: Milestone },
 ]
 
-const allNavItems = [...frameworkNavItems, ...chapterNavItems, ...operatingModelNavItems]
+const additionalNavItems = [{ to: '/artifact-library', label: 'Artifact Library', icon: Archive }]
+
+const allNavItems = [...frameworkNavItems, ...chapterNavItems, ...operatingModelNavItems, ...additionalNavItems]
 
 function NavSection({
   title,
@@ -141,6 +144,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavSection
               title="Operating Model"
               items={operatingModelNavItems}
+              collapsed={sidebarCollapsed}
+              onNavigate={() => setMobileNavOpen(false)}
+            />
+            <NavSection
+              title="Artifacts & AI"
+              items={additionalNavItems}
               collapsed={sidebarCollapsed}
               onNavigate={() => setMobileNavOpen(false)}
             />
