@@ -1329,7 +1329,7 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
       <div className="relative space-y-4">
         {/* TOP: Coverage dashboard bar */}
         <div className="rounded-2xl border border-white/10 bg-slate-900/35">
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-stretch">
+          <div className="traceability-coverage-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_0.8fr_1fr] items-stretch">
             <div className="px-4 py-3 border-b border-white/10 sm:border-r sm:border-b-white/10 xl:border-b-0">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Traceability Studio</p>
               <h3 className="mt-1 text-2xl font-semibold text-slate-100">The proof engine</h3>
@@ -1410,7 +1410,7 @@ export function TraceabilityProofGraph({ links, selectedId, onSelect }: { links:
             </div>
 
             {/* PIPELINE STRIP */}
-            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/30 p-3">
+            <div className="traceability-chain-strip overflow-x-auto rounded-2xl border border-white/10 bg-slate-900/30 p-3">
               <div className="flex min-w-[640px] items-center">
                 {stageSpec.map((s, idx) => (
                   <div key={s.key} className="flex items-center flex-1 min-w-0">

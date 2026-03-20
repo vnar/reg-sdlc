@@ -676,7 +676,9 @@ export default function ClassificationAssessment() {
               <h3 className="mt-1 text-[13px] font-semibold text-slate-50">{lane.subtitle}</h3>
             </div>
 
-            <Radar values={scoreValues.map((v) => v)} />
+            <div className="classification-interactive-radar">
+              <Radar values={scoreValues.map((v) => v)} />
+            </div>
 
             {done === total && (
               <div className="space-y-4">

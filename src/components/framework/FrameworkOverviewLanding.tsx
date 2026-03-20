@@ -466,7 +466,7 @@ export function FrameworkOverviewLanding() {
           </div>
 
           <div className="flex items-center justify-center">
-            <div className="w-full max-w-[540px] rounded-2xl border border-[#1f3060] bg-[#0a1428]/70 p-5 backdrop-blur">
+            <div className="framework-hero-blueprint-card w-full max-w-[540px] rounded-2xl border border-[#1f3060] bg-[#0a1428]/70 p-5 backdrop-blur">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[10px] uppercase tracking-[0.25em] text-[#3a5070]">Operating model blueprint</p>
                 <span className="text-[11px] text-[#0db3dc] flex items-center gap-2 rounded-md border border-[#0b9ec4]/25 bg-[#0b9ec4]/10 px-3 py-1.5">
@@ -791,7 +791,7 @@ export function FrameworkOverviewLanding() {
         </div>
 
         <div className="mb-6 rounded-2xl border border-[#1f3060] bg-[#080f1e] p-4">
-          <div className="flex items-center gap-3 flex-wrap">
+            <div className="framework-reading-order-flow flex items-center gap-3 flex-wrap">
             {[
               { label: 'Regulatory Universe', active: true },
               { label: 'Classification' },
