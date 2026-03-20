@@ -461,7 +461,7 @@ export default function ClassificationAssessment() {
         <div className="classification-print-exec hidden print:block print:text-[10px] print:leading-snug">
           <div className="flex flex-wrap items-end justify-between gap-2 border-b border-slate-300 pb-2">
             <div>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">Software Compliance Portal · Executive summary</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-slate-500">Codex · Executive summary</p>
               <h1 className="mt-0.5 text-base font-bold tracking-tight text-slate-900">Classification assessment</h1>
             </div>
             <p className="text-[9px] text-slate-500">{generatedAt}</p>

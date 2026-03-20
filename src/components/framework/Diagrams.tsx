@@ -1999,12 +1999,12 @@ export function FrameworkHeroPoster() {
       <div className="relative p-6 md:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.32em] text-slate-300">REGULATED SOFTWARE COMPLIANCE PORTAL</p>
-            <p className="mt-2 text-xs uppercase tracking-[0.32em] text-slate-300">FRAMEWORK ATLAS</p>
+            <p className="text-xs uppercase tracking-[0.32em] text-slate-300">CODEX</p>
+            <p className="mt-2 text-xs uppercase tracking-[0.32em] text-slate-300">REGULATED SOFTWARE COMPLIANCE FRAMEWORK</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-50 md:text-5xl">
               Regulated Software Compliance
               <br />
-              Reference Framework
+              Framework
             </h1>
             <p className="mt-4 text-base text-slate-300">
               The foundation for building, validating, and operating software in a regulated healthcare environment. A consulting-grade reference architecture linking obligations, lifecycle rigor, governance, and traceable evidence.

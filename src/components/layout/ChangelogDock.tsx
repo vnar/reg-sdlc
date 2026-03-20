@@ -7,7 +7,7 @@ const CHANGELOG_META = {
   version: 'v1.0.0',
   latestCommit: '1962022',
   lastPublished: '20 Mar 2026',
-  repoLabel: 'vnar / reg-sdlc',
+  repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
   authorName: 'Vihar Nar',
   authorUrl: 'https://www.linkedin.com/in/viharnar/',
@@ -101,8 +101,8 @@ export default function ChangelogDock() {
           <div className="chmodal-panel">
           <header className="chmodal-header">
             <div className="chmodal-header-left">
-              <h2>Framework Changelog &amp; Principles</h2>
-              <p>Version history, regulatory basis, and design philosophy</p>
+              <h2>Codex — Framework Changelog &amp; Principles</h2>
+              <p>Version history, regulatory basis, and design philosophy for the Codex framework</p>
               <div className="chmodal-meta">
                 <span className="cl-version-badge">{CHANGELOG_META.version}</span>
                 <span className="cl-commit-badge">{CHANGELOG_META.latestCommit}</span>

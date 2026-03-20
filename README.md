@@ -1,4 +1,4 @@
-# Regulated Software Compliance Reference Framework
+# Codex — Regulated Software Compliance Framework
 
 A premium, client-facing digital framework for regulated software in healthcare.  
 The experience is chapter-based and storytelling-first: regulatory universe -> classification -> SDLC lane rigor -> lifecycle -> evidence -> governance -> approvals -> traceability -> risk hotspots.

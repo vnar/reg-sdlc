@@ -340,7 +340,7 @@ const CHANGELOG_META = {
   version: 'v1.0.0',
   latestCommit: '1962022',
   lastPublished: '20 Mar 2026',
-  repoLabel: 'vnar / reg-sdlc',
+  repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
   authorName: 'Vihar Nar',
   authorUrl: 'https://www.linkedin.com/in/viharnar/',
@@ -437,9 +437,9 @@ export function FrameworkOverviewLanding() {
         }}
       >
         <div className="px-6 pt-6 lg:px-8">
-          <p className="text-[10px] uppercase tracking-[0.32em] text-[#4a6fa0]">REGULATED SOFTWARE COMPLIANCE PORTAL · FRAMEWORK ATLAS</p>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-[#4a6fa0]">CODEX · FRAMEWORK ATLAS</p>
           <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight text-[#f0f6ff] lg:text-[48px]">
-            Regulated Software <span style={{ color: TOKENS.teal }}>Compliance</span> Reference Framework
+            Regulated Software <span style={{ color: TOKENS.teal }}>Compliance</span> Framework
           </h1>
         </div>
 
@@ -990,8 +990,8 @@ export function FrameworkOverviewLanding() {
         <div className="chmodal-panel">
           <header className="chmodal-header">
             <div className="chmodal-header-left">
-              <h2>Framework Changelog &amp; Principles</h2>
-              <p>Version history, regulatory basis, and design philosophy</p>
+              <h2>Codex — Framework Changelog &amp; Principles</h2>
+              <p>Version history, regulatory basis, and design philosophy for the Codex framework</p>
               <div className="chmodal-meta">
                 <span className="cl-version-badge">{CHANGELOG_META.version}</span>
                 <span className="cl-commit-badge">{CHANGELOG_META.latestCommit}</span>
