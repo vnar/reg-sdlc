@@ -554,7 +554,7 @@ export function LifecycleSwimlane({ phases }: { phases: LifecyclePhase[] }) {
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Lifecycle Architecture</p>
             <h3 className="mt-2 text-2xl font-semibold text-slate-100">Phase gates, outputs, and accountable sign-off</h3>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+          <div className="lifecycle-stage-chips flex flex-wrap gap-2 text-xs text-slate-400">
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Execution →</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Validation →</span>
             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-slate-300">Release →</span>

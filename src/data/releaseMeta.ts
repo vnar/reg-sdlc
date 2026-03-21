@@ -8,7 +8,7 @@ export type ReleaseCommit = {
 
 export const RELEASE_META = {
   version: 'v1.0.0',
-  latestCommit: '8d88153',
+  latestCommit: 'beb9c50',
   lastPublished: '21 Mar 2026',
   repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
@@ -18,10 +18,16 @@ export const RELEASE_META = {
 
 export const RELEASE_COMMITS: ReleaseCommit[] = [
   {
+    "commit": "beb9c50",
+    "date": "21 Mar 2026",
+    "message": "feat: add GA4 SPA route tracking",
+    "current": true
+  },
+  {
     "commit": "8d88153",
     "date": "21 Mar 2026",
     "message": "chore: add GA tracking and refresh release metadata",
-    "current": true
+    "current": false
   },
   {
     "commit": "7012217",
@@ -81,12 +87,6 @@ export const RELEASE_COMMITS: ReleaseCommit[] = [
     "commit": "1962022",
     "date": "20 Mar 2026",
     "message": "Add Artifact Library navigation and tree template explorer",
-    "current": false
-  },
-  {
-    "commit": "d99f9db",
-    "date": "20 Mar 2026",
-    "message": "Polish framework presentation and export behavior for production demos.",
     "current": false
   }
 ] as ReleaseCommit[]
