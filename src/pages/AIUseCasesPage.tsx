@@ -414,13 +414,10 @@ function NarrativeSection({
 }) {
   return (
     <section
-      className="pt-[22px] font-sans text-[12px] leading-6 text-slate-200"
+      className="h-full rounded-xl border border-white/10 p-3 font-sans text-[12px] leading-6 text-slate-200"
       style={{
-        borderTop: `1px solid ${color}44`,
         backgroundColor: tinted ? 'rgba(109,40,217,0.06)' : 'transparent',
-        borderRadius: tinted ? 10 : 0,
-        paddingInline: tinted ? 12 : 0,
-        paddingBottom: tinted ? 12 : 0,
+        borderLeft: `2px solid ${color}`,
       }}
     >
       <div className="mb-3 flex items-center gap-2">
@@ -491,40 +488,38 @@ function UseCaseTemplateCard({
               </tbody>
             </table>
 
-            <div className="mt-6 space-y-0">
-            <NarrativeSection label="Problem Statement" color="#e11d48">
-              <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.problemStatement}</p>
-            </NarrativeSection>
+            <div className="mt-6 space-y-4">
+              <div className="grid gap-3 xl:grid-cols-4">
+                <NarrativeSection label="Problem Statement" color="#e11d48">
+                  <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.problemStatement}</p>
+                </NarrativeSection>
 
-            <NarrativeSection label="Current State" color="#d97706">
-              {listValue(useCase.currentState)}
-            </NarrativeSection>
+                <NarrativeSection label="Current State" color="#d97706">
+                  {listValue(useCase.currentState)}
+                </NarrativeSection>
 
-            <NarrativeSection label="AI Enablement" color="#6d28d9" tinted>
-              {listValue(useCase.aiEnablement)}
-            </NarrativeSection>
+                <NarrativeSection label="AI Enablement" color="#6d28d9" tinted>
+                  {listValue(useCase.aiEnablement)}
+                </NarrativeSection>
 
-            <NarrativeSection label="Future State" color="#0d9488">
-              <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.futureState}</p>
-            </NarrativeSection>
-
-            <NarrativeSection label="Business Value" color="#3b4bc8">
-              <div className="flex flex-wrap gap-2">
-                {useCase.businessValue.map((metric) => (
-                  <span key={metric} className="max-w-full break-words whitespace-normal rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
-                    {metric}
-                  </span>
-                ))}
+                <NarrativeSection label="Future State" color="#0d9488">
+                  <p className="font-sans text-[12px] leading-6 text-slate-200">{useCase.futureState}</p>
+                </NarrativeSection>
               </div>
-            </NarrativeSection>
 
-            <section className="pt-[22px] font-sans text-[12px] leading-6 text-slate-200">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Recommended Visual</p>
-              <div className="space-y-2">
-                <p>{useCase.recommendedVisual}</p>
+              <NarrativeSection label="Business Value" color="#3b4bc8">
+                <div className="flex flex-wrap gap-2">
+                  {useCase.businessValue.map((metric) => (
+                    <span key={metric} className="max-w-full break-words whitespace-normal rounded-full border border-emerald-400/40 bg-emerald-500/15 px-2.5 py-1 text-xs font-semibold text-emerald-200">
+                      {metric}
+                    </span>
+                  ))}
+                </div>
+              </NarrativeSection>
+
+              <section className="font-sans text-[12px] leading-6 text-slate-200">
                 <AIFlowStrip narrative={useCase.recommendedVisual} />
-              </div>
-            </section>
+              </section>
             </div>
           </div>
         ) : null}

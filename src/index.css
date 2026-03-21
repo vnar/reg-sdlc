@@ -873,3 +873,91 @@ body {
     display: inline-flex !important;
   }
 }
+
+/* Apple-like mobile rhythm: additive overrides only */
+@media (max-width: 768px) {
+  :root {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  .portal-bg {
+    background-attachment: scroll;
+  }
+
+  .app-main-chrome {
+    min-height: 56px !important;
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
+    backdrop-filter: saturate(140%) blur(14px);
+  }
+
+  .app-main-area {
+    padding-top: 86px !important;
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .app-main-area .rounded-2xl,
+  .app-main-area .rounded-xl {
+    border-radius: 14px !important;
+  }
+
+  .app-main-area h1,
+  .app-main-area .text-4xl,
+  .app-main-area .text-3xl {
+    font-size: clamp(1.45rem, 6vw, 1.8rem) !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.015em;
+  }
+
+  .app-main-area h2,
+  .app-main-area .text-2xl {
+    font-size: clamp(1.1rem, 4.6vw, 1.3rem) !important;
+    line-height: 1.24 !important;
+  }
+
+  .app-main-area p,
+  .app-main-area li,
+  .app-main-area td {
+    font-size: 14px !important;
+    line-height: 1.62 !important;
+  }
+
+  .app-main-area button,
+  .app-main-area a {
+    -webkit-tap-highlight-color: rgba(59, 75, 200, 0.2);
+  }
+
+  .app-main-area button,
+  .app-main-area [role='button'],
+  .app-main-area a.group.flex.items-center.rounded-xl {
+    min-height: 44px !important;
+  }
+
+  .app-sidebar {
+    width: min(86vw, 320px) !important;
+    padding-top: calc(12px + env(safe-area-inset-top)) !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
+  }
+
+  .app-sidebar nav a {
+    min-height: 44px !important;
+  }
+
+  .app-main-area > * {
+    max-width: 100%;
+  }
+
+  .app-main-area pre,
+  .app-main-area code {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .app-main-area .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
