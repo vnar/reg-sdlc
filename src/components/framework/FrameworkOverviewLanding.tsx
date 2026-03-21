@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Route, Layers, Network, Binary, ChevronDown } from 'lucide-react'
 import ProblemSolutionOutcomesBlueprint from './ProblemSolutionOutcomesBlueprint'
+import { RELEASE_COMMITS, RELEASE_META } from '../../data/releaseMeta'
 
 function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
   return (
@@ -279,46 +280,13 @@ const PERSONAS: Persona[] = [
   },
 ]
 
-const CHANGELOG_ENTRIES = [
-  {
-    version: 'v1.0.0',
-    date: '14 Mar 2025',
-    commit: 'a3f2c91',
-    current: true,
-    items: [
-      { type: 'NEW', text: 'Artifact Library — 27 pre-structured templates across 7 lifecycle groups, with PathAI Reporter pre-populated examples' },
-      { type: 'NEW', text: 'AI Use Cases — 10 transformation narratives covering SaMD, Lab, GxP, AI/ML, and enterprise healthcare' },
-      { type: 'NEW', text: 'AI Enablement Layer — capability matrix mapped across P0–P6 lifecycle phases' },
-      { type: 'UPDATE', text: 'Classification Model — CD-1 through CD-8 revised to incorporate EU AI Act Annex III alignment' },
-      { type: 'UPDATE', text: 'Regulatory Universe expanded from 30 to 40 items; NIST AI RMF and EU AI Act added' },
-      { type: 'FIX', text: 'SDLC Lanes — intensity dot alignment corrected; Lane D post-market requirements updated for EU MDR Article 83' },
-    ],
-  },
-  {
-    version: 'v0.9.0',
-    date: '28 Jan 2025',
-    commit: '7d14e88',
-    current: false,
-    items: [
-      { type: 'NEW', text: 'Traceability Studio — bidirectional chain from regulation through requirement, risk, design, test, to approval' },
-      { type: 'NEW', text: 'Guardrails & Paved Roads — three-track compliance automation model' },
-      { type: 'CONTENT', text: 'Governance Model — L1–L4 governance layers with phase gate requirements and RACI matrix' },
-      { type: 'CONTENT', text: 'Approval Matrix — full deliverable-to-approver mapping across P0–P6' },
-    ],
-  },
-  {
-    version: 'v0.8.0',
-    date: '10 Dec 2024',
-    commit: '2c89ab3',
-    current: false,
-    items: [
-      { type: 'NEW', text: 'Framework Overview — core pillar architecture, persona cards, reading order' },
-      { type: 'NEW', text: 'Classification Model — 8-dimension CD framework for SDLC lane routing' },
-      { type: 'NEW', text: 'Regulatory Universe — initial 30-item standard and regulation catalogue' },
-      { type: 'NEW', text: 'SDLC Lanes A–D with phase-by-phase compliance intensity matrix' },
-    ],
-  },
-]
+const CHANGELOG_ENTRIES = RELEASE_COMMITS.map((entry, idx) => ({
+  version: idx === 0 ? RELEASE_META.version : 'Commit',
+  date: entry.date,
+  commit: entry.commit,
+  current: entry.current,
+  items: [{ type: 'COMMIT', text: entry.message }],
+}))
 
 const REGULATION_ROWS = [
   ['IEC 62304:2015+AMD1', 'Core', 'Global', 'Defines SDLC process requirements for medical device software — primary structural basis for Lane C/D lifecycle phases and evidence requirements'],
@@ -334,17 +302,6 @@ const REGULATION_ROWS = [
   ['GDPR / 45 CFR Part 164', 'Privacy', 'EU / US', 'Privacy by design obligations — drives ART-013 DPIA requirements and data handling controls in Lane B–D evidence requirements'],
   ['ISO 13485:2016', 'Quality', 'Global', 'QMS requirements for medical device organizations — informs governance model role definitions and approval authority structure'],
 ] as const
-
-// Controlled release metadata (keep VERSION in sync with README).
-const CHANGELOG_META = {
-  version: 'v1.0.0',
-  latestCommit: '1962022',
-  lastPublished: '20 Mar 2026',
-  repoLabel: 'viharnar / codex',
-  repoUrl: 'https://github.com/vnar/reg-sdlc',
-  authorName: 'Vihar Nar',
-  authorUrl: 'https://www.linkedin.com/in/viharnar/',
-} as const
 
 export function FrameworkOverviewLanding() {
   const [openPillars, setOpenPillars] = useState<Record<string, boolean>>({})
@@ -943,19 +900,19 @@ export function FrameworkOverviewLanding() {
       >
         <div className="cl-row cl-row-top">
           <span className="cl-pulse-dot" />
-          <span className="cl-version-badge">{CHANGELOG_META.version}</span>
+          <span className="cl-version-badge">{RELEASE_META.version}</span>
           <span className="cl-sep" />
           <span className="cl-commit-badge">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M7 6a3 3 0 1 0 0 6h3.5a3.5 3.5 0 0 1 7 0h1.5v-2h-1.5a3.5 3.5 0 0 1-7 0H7a3 3 0 0 0 0 6h3v-2H7a1 1 0 1 1 0-2h3.5a3.5 3.5 0 0 1 7 0H19v2h-1.5a3.5 3.5 0 0 1-7 0H7a3 3 0 1 0 0 6h3v-2H7a1 1 0 1 1 0-2h3.5a3.5 3.5 0 0 1 7 0H19v-2h-1.5a3.5 3.5 0 0 1-7 0H7a3 3 0 1 0 0 6h3v-2H7a1 1 0 1 1 0-2h3.5a3.5 3.5 0 0 1 7 0H19v-2h-1.5a3.5 3.5 0 0 1-7 0H7a3 3 0 1 0 0 6h3v-2H7a1 1 0 1 1 0-2h3.5a3.5 3.5 0 0 1 7 0H19v-2h-1.5a3.5 3.5 0 0 1-7 0H7a3 3 0 1 0 0 6h3" />
             </svg>
-            {CHANGELOG_META.latestCommit}
+            {RELEASE_META.latestCommit}
           </span>
         </div>
         <div className="cl-row cl-row-bottom">
           <a
             className="cl-repo"
-            href={CHANGELOG_META.repoUrl}
+            href={RELEASE_META.repoUrl}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
@@ -963,18 +920,18 @@ export function FrameworkOverviewLanding() {
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M17 9V7a5 5 0 0 0-10 0v2H5v11h14V9h-2zm-8 0V7a3 3 0 0 1 6 0v2H9z" />
             </svg>
-            {CHANGELOG_META.repoLabel}
+            {RELEASE_META.repoLabel}
             <span className="cl-private-pill">private</span>
           </a>
           <span className="cl-sep" />
           <a
             className="cl-author-link"
-            href={CHANGELOG_META.authorUrl}
+            href={RELEASE_META.authorUrl}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}
           >
-            {CHANGELOG_META.authorName}
+            {RELEASE_META.authorName}
           </a>
           <span className="cl-sep" />
           <span className="cl-hint cl-hint-inline">
@@ -993,8 +950,8 @@ export function FrameworkOverviewLanding() {
               <h2>Codex — Framework Changelog &amp; Principles</h2>
               <p>Version history, regulatory basis, and design philosophy for the Codex framework</p>
               <div className="chmodal-meta">
-                <span className="cl-version-badge">{CHANGELOG_META.version}</span>
-                <span className="cl-commit-badge">{CHANGELOG_META.latestCommit}</span>
+                <span className="cl-version-badge">{RELEASE_META.version}</span>
+                <span className="cl-commit-badge">{RELEASE_META.latestCommit}</span>
                 <span className="chmodal-current-pill">● Current</span>
               </div>
             </div>
@@ -1019,7 +976,7 @@ export function FrameworkOverviewLanding() {
             <section id="chtab-changelog" className={`chmodal-tab-panel ${activeChangelogTab === 'changelog' ? 'active' : ''}`}>
               <div className="chmodal-timeline">
                 {CHANGELOG_ENTRIES.map((entry, idx) => (
-                  <div key={entry.version} className="chmodal-tl-entry">
+                  <div key={entry.commit} className="chmodal-tl-entry">
                     <div className="chmodal-tl-left">
                       <span className={`chmodal-tl-dot ${entry.current ? 'current' : ''}`} />
                       {idx < CHANGELOG_ENTRIES.length - 1 ? <span className="chmodal-tl-line" /> : null}

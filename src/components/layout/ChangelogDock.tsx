@@ -1,27 +1,8 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { RELEASE_COMMITS, RELEASE_META } from '../../data/releaseMeta'
 
 type ChangelogTab = 'changelog' | 'philosophy' | 'regulations'
-
-const CHANGELOG_META = {
-  version: 'v1.0.0',
-  latestCommit: '1962022',
-  lastPublished: '20 Mar 2026',
-  repoLabel: 'viharnar / codex',
-  repoUrl: 'https://github.com/vnar/reg-sdlc',
-  authorName: 'Vihar Nar',
-  authorUrl: 'https://www.linkedin.com/in/viharnar/',
-} as const
-
-const CHANGELOG_ENTRIES = [
-  { commit: '1962022', date: '20 Mar 2026', message: 'Add Artifact Library navigation and tree template explorer', current: true },
-  { commit: 'd99f9db', date: '19 Mar 2026', message: 'Polish framework presentation and export behavior for production demos.', current: false },
-  { commit: '56ef861', date: '19 Mar 2026', message: 'AppShell: restore left sidebar with collapsible rail and mobile drawer', current: false },
-  { commit: '6e05223', date: '19 Mar 2026', message: 'Refine framework pages with interactive detail states and realistic traceability data.', current: false },
-  { commit: 'a46462e', date: '19 Mar 2026', message: '2nd change', current: false },
-  { commit: '7c3d935', date: '19 Mar 2026', message: 'promote to AWS', current: false },
-  { commit: 'ab69482', date: '19 Mar 2026', message: 'Initialize regulated software compliance reference framework baseline', current: false },
-]
 
 const REGULATION_ROWS = [
   ['IEC 62304:2015+AMD1', 'Core', 'Global', 'Defines SDLC process requirements for medical device software — primary structural basis for Lane C/D lifecycle phases and evidence requirements'],
@@ -74,21 +55,21 @@ export default function ChangelogDock() {
       <div className="cl-sidebar-dock" role="button" tabIndex={0} onClick={() => setOpen(true)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ' ? setOpen(true) : null)}>
         <div className="cl-row cl-row-top">
           <span className="cl-pulse-dot" />
-          <span className="cl-version-badge">{CHANGELOG_META.version}</span>
+          <span className="cl-version-badge">{RELEASE_META.version}</span>
           <span className="cl-sep" />
-          <span className="cl-commit-badge">{CHANGELOG_META.latestCommit}</span>
+          <span className="cl-commit-badge">{RELEASE_META.latestCommit}</span>
         </div>
         <div className="cl-row cl-row-bottom">
           <span className="cl-row-dot" />
-          <a className="cl-repo" href={CHANGELOG_META.repoUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-            {CHANGELOG_META.repoLabel}
+          <a className="cl-repo" href={RELEASE_META.repoUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+            {RELEASE_META.repoLabel}
             <span className="cl-private-pill">private</span>
           </a>
         </div>
         <div className="cl-row cl-row-bottom">
           <span className="cl-row-dot" />
-          <a className="cl-author-link" href={CHANGELOG_META.authorUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
-            {CHANGELOG_META.authorName}
+          <a className="cl-author-link" href={RELEASE_META.authorUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+            {RELEASE_META.authorName}
           </a>
         </div>
         <div className="cl-row">
@@ -104,8 +85,8 @@ export default function ChangelogDock() {
               <h2>Codex — Framework Changelog &amp; Principles</h2>
               <p>Version history, regulatory basis, and design philosophy for the Codex framework</p>
               <div className="chmodal-meta">
-                <span className="cl-version-badge">{CHANGELOG_META.version}</span>
-                <span className="cl-commit-badge">{CHANGELOG_META.latestCommit}</span>
+                <span className="cl-version-badge">{RELEASE_META.version}</span>
+                <span className="cl-commit-badge">{RELEASE_META.latestCommit}</span>
                 <span className="chmodal-current-pill">● Current</span>
               </div>
             </div>
@@ -166,11 +147,11 @@ export default function ChangelogDock() {
             <section className={`chmodal-tab-panel ${tab === 'changelog' ? 'active' : ''}`}>
               <p className="chmodal-copy-sm">Real commit history from the repository:</p>
               <div className="chmodal-timeline">
-                {CHANGELOG_ENTRIES.map((entry, idx) => (
+                {RELEASE_COMMITS.map((entry, idx) => (
                   <div key={entry.commit} className="chmodal-tl-entry">
                     <div className="chmodal-tl-left">
                       <span className={`chmodal-tl-dot ${entry.current ? 'current' : ''}`} />
-                      {idx < CHANGELOG_ENTRIES.length - 1 ? <span className="chmodal-tl-line" /> : null}
+                      {idx < RELEASE_COMMITS.length - 1 ? <span className="chmodal-tl-line" /> : null}
                     </div>
                     <div className="chmodal-tl-content">
                       <div className="chmodal-entry-head">

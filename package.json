@@ -5,14 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "sync:release-meta": "node scripts/update-release-meta.mjs",
+    "build": "npm run sync:release-meta && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed",
     "test:ui:debug": "playwright test --debug",
     "verify:prepush": "npm run build && npm run test:ui",
-    "push:guarded": "npm run verify:prepush && git push"
+    "push:guarded": "npm run sync:release-meta && npm run verify:prepush && git push"
   },
   "dependencies": {
     "clsx": "^2.1.1",

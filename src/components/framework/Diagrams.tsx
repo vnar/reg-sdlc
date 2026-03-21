@@ -278,7 +278,7 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
   ] as const
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="lifecycle-architecture relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
       <div className="pointer-events-none absolute inset-0 opacity-80">
         <div className="absolute -left-10 top-5 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
         <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl" />
@@ -292,7 +292,7 @@ export function SDLCStaircase({ lanes }: { lanes: Lane[] }) {
         </p>
 
         {/* SECTION 1 — Escalation spine */}
-        <div className="mt-6 rounded-2xl border border-white/10 bg-slate-900/30 p-4">
+        <div className="lifecycle-pipeline-strip mt-6 rounded-2xl border border-white/10 bg-slate-900/30 p-4">
           <div className="flex items-start">
             <div
               className="mt-[18px] h-[2px] flex-1 rounded-full"
@@ -601,7 +601,7 @@ export function LifecycleSwimlane({ phases }: { phases: LifecyclePhase[] }) {
         </div>
 
         {/* Phase cards in a single horizontal row */}
-        <div className="mt-4 rounded-2xl border border-white/10 bg-slate-900/20 p-4">
+        <div className="lifecycle-phase-cards mt-4 rounded-2xl border border-white/10 bg-slate-900/20 p-4">
           <div className="flex flex-nowrap items-stretch gap-3">
             {phases.map((p, idx) => {
               const t = phaseTypeByIndex(idx)
@@ -682,7 +682,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
+    <div className="evidence-architecture relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 p-6">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
         <div className="absolute right-0 top-10 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -697,7 +697,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
           </p>
         </div>
 
-        <div className="mt-4 flex flex-nowrap items-center gap-3 overflow-x-auto pb-1">
+        <div className="evidence-summary-pills mt-4 flex flex-nowrap items-center gap-3 overflow-x-auto pb-1">
           <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300 whitespace-nowrap">
             <span className="font-semibold text-slate-100">{totalDocuments}</span> total documents
           </div>
@@ -765,7 +765,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
                   style={{ borderTopColor: topColor, borderTopWidth: 3, borderTopStyle: 'solid' }}
                 >
                   {isBinder5 ? (
-                    <div className="grid grid-cols-[260px_1fr] gap-4 items-start">
+                    <div className="evidence-binder-five grid grid-cols-[260px_1fr] gap-4 items-start">
                       <div>
                         {binderHeader}
                         {phasesPills}
@@ -773,7 +773,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
                       <div>
                         <div className="mt-1">
                           <p className="text-xs uppercase tracking-wider text-slate-500">Documents</p>
-                          <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-2">
+                          <div className="evidence-binder-five-docs mt-2 grid grid-cols-3 gap-x-4 gap-y-2">
                             {b.contents.map((c) => (
                               <div key={c} className="flex items-center justify-between gap-3">
                                 <span className="text-[11px] text-slate-300 leading-4">{c}</span>
@@ -797,7 +797,7 @@ export function EvidenceVault({ binders }: { binders: Binder[] }) {
 
             return (
               <>
-                <div className="grid grid-cols-4 gap-4 items-start">
+                <div className="evidence-binder-grid grid grid-cols-4 gap-4 items-start">
                   {binderTop.map((b) => (
                     <div key={b.id}>{renderBinderCard(b)}</div>
                   ))}

@@ -960,4 +960,90 @@ body {
   .app-main-area .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Lifecycle Architecture mobile legibility */
+  .lifecycle-architecture {
+    padding: 14px !important;
+  }
+
+  .lifecycle-architecture h3 {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+  }
+
+  .lifecycle-architecture .lifecycle-pipeline-strip {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px !important;
+  }
+
+  .lifecycle-architecture .lifecycle-pipeline-strip > div {
+    min-width: 680px;
+  }
+
+  .lifecycle-architecture .lifecycle-pipeline-strip [class*='text-[9px]'],
+  .lifecycle-architecture .lifecycle-pipeline-strip [class*='text-[8px]'] {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  .lifecycle-architecture .lifecycle-phase-cards > div {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .lifecycle-architecture .lifecycle-phase-cards h4 {
+    font-size: 15px !important;
+    line-height: 1.4 !important;
+  }
+
+  .lifecycle-architecture .lifecycle-phase-cards p,
+  .lifecycle-architecture .lifecycle-phase-cards li,
+  .lifecycle-architecture .lifecycle-phase-cards span {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+  }
+
+  .lifecycle-architecture .lifecycle-phase-cards [class*='text-[11px]'],
+  .lifecycle-architecture .lifecycle-phase-cards [class*='text-[10px]'],
+  .lifecycle-architecture .lifecycle-phase-cards [class*='text-[9px]'] {
+    font-size: 11px !important;
+  }
+
+  /* Evidence Architecture mobile legibility */
+  .evidence-architecture {
+    padding: 14px !important;
+  }
+
+  .evidence-architecture h3 {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+  }
+
+  .evidence-architecture .evidence-summary-pills {
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
+  }
+
+  .evidence-architecture .evidence-binder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .evidence-architecture .evidence-binder-five {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .evidence-architecture .evidence-binder-five-docs {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .evidence-architecture [class*='text-[11px]'],
+  .evidence-architecture [class*='text-[10px]'],
+  .evidence-architecture [class*='text-xs'] {
+    font-size: 12px !important;
+    line-height: 1.55 !important;
+  }
 }
