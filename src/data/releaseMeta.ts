@@ -8,7 +8,7 @@ export type ReleaseCommit = {
 
 export const RELEASE_META = {
   version: 'v1.0.0',
-  latestCommit: '4300c4b',
+  latestCommit: '7012217',
   lastPublished: '21 Mar 2026',
   repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
@@ -18,10 +18,16 @@ export const RELEASE_META = {
 
 export const RELEASE_COMMITS: ReleaseCommit[] = [
   {
+    "commit": "7012217",
+    "date": "21 Mar 2026",
+    "message": "fix mobile legibility and auto-sync release metadata",
+    "current": true
+  },
+  {
     "commit": "4300c4b",
     "date": "21 Mar 2026",
     "message": "refine mobile polish and AI use-case readability",
-    "current": true
+    "current": false
   },
   {
     "commit": "a8d14d5",
@@ -81,12 +87,6 @@ export const RELEASE_COMMITS: ReleaseCommit[] = [
     "commit": "56ef861",
     "date": "20 Mar 2026",
     "message": "AppShell: restore left sidebar with collapsible rail and mobile drawer",
-    "current": false
-  },
-  {
-    "commit": "6e05223",
-    "date": "20 Mar 2026",
-    "message": "Refine framework pages with interactive detail states and realistic traceability data.",
     "current": false
   }
 ] as ReleaseCommit[]
