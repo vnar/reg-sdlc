@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
-import { initializeGA, trackPageView } from './utils/analytics'
+import { initAnalytics, trackPageView } from './utils/analytics'
 
 const FrameworkOverviewPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.FrameworkOverviewPage })))
 const RegulatoryUniversePage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.RegulatoryUniversePage })))
@@ -19,18 +19,20 @@ const AIUseCasesPage = lazy(() => import('./pages/AIUseCasesPage'))
 
 function RouteAnalytics() {
   const location = useLocation()
-  const lastTrackedPath = useRef<string>('')
+  const isFirstRender = useRef(true)
 
   useEffect(() => {
-    initializeGA()
+    initAnalytics()
   }, [])
 
   useEffect(() => {
-    const path = `${location.pathname}${location.search}${location.hash}`
-    if (lastTrackedPath.current === path) return
-    lastTrackedPath.current = path
-    trackPageView(path)
-  }, [location.pathname, location.search, location.hash])
+    // Initial page view is tracked by GA script config in index.html.
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    trackPageView(location.pathname)
+  }, [location.pathname])
 
   return null
 }

@@ -8,7 +8,7 @@ export type ReleaseCommit = {
 
 export const RELEASE_META = {
   version: 'v1.0.0',
-  latestCommit: '0a6e539',
+  latestCommit: '1936cf4',
   lastPublished: '21 Mar 2026',
   repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
@@ -18,10 +18,16 @@ export const RELEASE_META = {
 
 export const RELEASE_COMMITS: ReleaseCommit[] = [
   {
+    "commit": "1936cf4",
+    "date": "21 Mar 2026",
+    "message": "feat: add mobile-first LinkedIn deep link with web fallback",
+    "current": true
+  },
+  {
     "commit": "0a6e539",
     "date": "21 Mar 2026",
     "message": "fix: improve lifecycle architecture mobile legibility",
-    "current": true
+    "current": false
   },
   {
     "commit": "beb9c50",
@@ -81,12 +87,6 @@ export const RELEASE_COMMITS: ReleaseCommit[] = [
     "commit": "8f10648",
     "date": "20 Mar 2026",
     "message": "Polish Guardrails & Paved Roads visual hierarchy.",
-    "current": false
-  },
-  {
-    "commit": "10d8c49",
-    "date": "20 Mar 2026",
-    "message": "Add AI Enablement module and changelog UX enhancements.",
     "current": false
   }
 ] as ReleaseCommit[]
