@@ -8,7 +8,7 @@ export type ReleaseCommit = {
 
 export const RELEASE_META = {
   version: 'v1.0.0',
-  latestCommit: 'd8082c0',
+  latestCommit: '29f3f6b',
   lastPublished: '21 Mar 2026',
   repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
@@ -18,10 +18,16 @@ export const RELEASE_META = {
 
 export const RELEASE_COMMITS: ReleaseCommit[] = [
   {
+    "commit": "29f3f6b",
+    "date": "21 Mar 2026",
+    "message": "feat: add lightweight feedback widget with silent submit flow",
+    "current": true
+  },
+  {
     "commit": "d8082c0",
     "date": "21 Mar 2026",
     "message": "fix: enable GA4 SPA tracking with route-based pageviews",
-    "current": true
+    "current": false
   },
   {
     "commit": "1936cf4",
@@ -81,12 +87,6 @@ export const RELEASE_COMMITS: ReleaseCommit[] = [
     "commit": "f024eff",
     "date": "20 Mar 2026",
     "message": "Add guarded UI regression gate for push and CI.",
-    "current": false
-  },
-  {
-    "commit": "9651ef5",
-    "date": "20 Mar 2026",
-    "message": "Rebrand portal UI copy and metadata to Codex.",
     "current": false
   }
 ] as ReleaseCommit[]

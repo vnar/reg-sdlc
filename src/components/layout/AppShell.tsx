@@ -23,6 +23,7 @@ import { clsx } from 'clsx'
 import ChangelogDock from './ChangelogDock'
 import { RELEASE_META } from '../../data/releaseMeta'
 import FeedbackWidget from './FeedbackWidget'
+import AboutWidget from './AboutWidget'
 
 const frameworkNavItems = [{ to: '/', label: 'Framework Overview', icon: Compass }]
 
@@ -97,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const current = allNavItems.find((item) => item.to === location.pathname)?.label ?? 'Workspace'
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 portal-bg">
+    <div className="min-h-screen bg-slate-950 text-slate-200 portal-bg about-blur-target">
       {mobileNavOpen ? (
         <button
           aria-label="Close navigation"
@@ -201,6 +202,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <X size={16} />
                 </button>
               ) : null}
+              <AboutWidget inline />
               <p className="text-sm font-medium text-slate-200">{current}</p>
             </div>
           </div>
