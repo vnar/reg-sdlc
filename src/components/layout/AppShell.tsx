@@ -22,6 +22,7 @@ import { useState, type ReactNode } from 'react'
 import { clsx } from 'clsx'
 import ChangelogDock from './ChangelogDock'
 import { RELEASE_META } from '../../data/releaseMeta'
+import FeedbackWidget from './FeedbackWidget'
 
 const frameworkNavItems = [{ to: '/', label: 'Framework Overview', icon: Compass }]
 
@@ -206,6 +207,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <FeedbackWidget currentPath={location.pathname} />
     </div>
   )
 }
