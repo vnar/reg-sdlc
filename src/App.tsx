@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useRef } from 'react'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
+import { initializeGA, trackPageView } from './utils/analytics'
 
 const FrameworkOverviewPage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.FrameworkOverviewPage })))
 const RegulatoryUniversePage = lazy(() => import('./pages/FrameworkPages').then((m) => ({ default: m.RegulatoryUniversePage })))
@@ -16,9 +17,28 @@ const ComplianceRiskHotspotsPage = lazy(() => import('./pages/FrameworkPages').t
 const ArtifactLibraryPage = lazy(() => import('./pages/ArtifactLibraryPage'))
 const AIUseCasesPage = lazy(() => import('./pages/AIUseCasesPage'))
 
+function RouteAnalytics() {
+  const location = useLocation()
+  const lastTrackedPath = useRef<string>('')
+
+  useEffect(() => {
+    initializeGA()
+  }, [])
+
+  useEffect(() => {
+    const path = `${location.pathname}${location.search}${location.hash}`
+    if (lastTrackedPath.current === path) return
+    lastTrackedPath.current = path
+    trackPageView(path)
+  }, [location.pathname, location.search, location.hash])
+
+  return null
+}
+
 function App() {
   return (
     <AppShell>
+      <RouteAnalytics />
       <Suspense fallback={<div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 text-sm text-slate-300">Loading workspace...</div>}>
         <Routes>
           <Route path="/" element={<FrameworkOverviewPage />} />
