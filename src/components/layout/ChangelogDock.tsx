@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { RELEASE_COMMITS, RELEASE_META } from '../../data/releaseMeta'
+import { LINKEDIN_WEB_URL } from '../../config/social'
+import { openLinkedInProfile } from '../../utils/linkedin'
 
 type ChangelogTab = 'changelog' | 'philosophy' | 'regulations'
 
@@ -22,6 +24,11 @@ const REGULATION_ROWS = [
 export default function ChangelogDock() {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState<ChangelogTab>('philosophy')
+  const handleLinkedInClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    openLinkedInProfile()
+  }
 
   useEffect(() => {
     if (!open) {
@@ -68,7 +75,7 @@ export default function ChangelogDock() {
         </div>
         <div className="cl-row cl-row-bottom">
           <span className="cl-row-dot" />
-          <a className="cl-author-link" href={RELEASE_META.authorUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+          <a className="cl-author-link" href={LINKEDIN_WEB_URL} target="_blank" rel="noreferrer" onClick={handleLinkedInClick}>
             {RELEASE_META.authorName}
           </a>
         </div>

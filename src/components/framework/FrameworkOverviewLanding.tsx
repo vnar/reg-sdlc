@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ShieldCheck, Route, Layers, Network, Binary, ChevronDown } from 'lucide-react'
 import ProblemSolutionOutcomesBlueprint from './ProblemSolutionOutcomesBlueprint'
 import { RELEASE_COMMITS, RELEASE_META } from '../../data/releaseMeta'
+import { LINKEDIN_WEB_URL } from '../../config/social'
+import { openLinkedInProfile } from '../../utils/linkedin'
 
 function Collapse({ open, children }: { open: boolean; children: React.ReactNode }) {
   return (
@@ -334,6 +336,11 @@ export function FrameworkOverviewLanding() {
   const openChangelogModal = () => setChangelogOpen(true)
   const closeChangelogModal = () => setChangelogOpen(false)
   const switchChangelogTab = (name: ChangelogTab) => setActiveChangelogTab(name)
+  const handleLinkedInClick = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    openLinkedInProfile()
+  }
 
   useEffect(() => {
     if (!changelogOpen) {
@@ -926,10 +933,10 @@ export function FrameworkOverviewLanding() {
           <span className="cl-sep" />
           <a
             className="cl-author-link"
-            href={RELEASE_META.authorUrl}
+            href={LINKEDIN_WEB_URL}
             target="_blank"
             rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleLinkedInClick}
           >
             {RELEASE_META.authorName}
           </a>
