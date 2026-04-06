@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { Maximize2, X } from 'lucide-react'
 import { RELEASE_META } from '../../data/releaseMeta'
+
+const ATLAS_IMAGE_SRC = '/codex-framework-atlas.png'
 
 export default function AboutWidget({ inline = false }: { inline?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [atlasOpen, setAtlasOpen] = useState(false)
+
+  const closeAbout = () => {
+    setAtlasOpen(false)
+    setOpen(false)
+  }
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open && !atlasOpen) return undefined
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setOpen(false)
+      if (e.key !== 'Escape') return
+      if (atlasOpen) {
+        setAtlasOpen(false)
+        return
       }
+      setOpen(false)
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open])
+  }, [open, atlasOpen])
 
   useEffect(() => {
     document.body.classList.toggle('about-open', open)
@@ -26,7 +38,10 @@ export default function AboutWidget({ inline = false }: { inline?: boolean }) {
       <button
         className={`about-bubble${inline ? ' about-bubble-inline' : ''}`}
         id="aboutBubble"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setAtlasOpen(false)
+          setOpen(true)
+        }}
         aria-label="About Codex"
         type="button"
       >
@@ -39,15 +54,33 @@ export default function AboutWidget({ inline = false }: { inline?: boolean }) {
 
       {typeof document !== 'undefined'
         ? createPortal(
-            <div className={`about-overlay ${open ? 'active' : ''}`} id="aboutOverlay" onClick={() => setOpen(false)}>
+            <div className={`about-overlay ${open ? 'active' : ''}`} id="aboutOverlay" onClick={closeAbout}>
               <div className="about-card" id="aboutCard" onClick={(e) => e.stopPropagation()}>
-                <button className="about-close" onClick={() => setOpen(false)} aria-label="Close" type="button">
+                <button className="about-close" onClick={closeAbout} aria-label="Close" type="button">
                   &times;
                 </button>
 
                 <div className="about-header">
                   <span className="about-wordmark">Codex</span>
                   <span className="about-tagline">Regulated Software Compliance Framework</span>
+                </div>
+
+                <div className="about-atlas">
+                  <p className="about-atlas-label">CODEX · FRAMEWORK ATLAS</p>
+                  <button
+                    type="button"
+                    className="about-atlas-trigger"
+                    onClick={() => setAtlasOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={atlasOpen}
+                  >
+                    <img src={ATLAS_IMAGE_SRC} alt="" className="about-atlas-thumb" decoding="async" loading="lazy" />
+                    <span className="about-atlas-trigger-text">
+                      <span className="about-atlas-trigger-title">Framework Atlas</span>
+                      <span className="about-atlas-trigger-sub">Full map — click to expand</span>
+                    </span>
+                    <Maximize2 className="about-atlas-ico" size={16} strokeWidth={2} aria-hidden />
+                  </button>
                 </div>
 
                 <div className="about-body">
@@ -130,6 +163,38 @@ export default function AboutWidget({ inline = false }: { inline?: boolean }) {
                 <div className="about-footer">
                   Built by <strong>viharnar</strong> &nbsp;·&nbsp; <span id="ab-version">{RELEASE_META.version}</span> &nbsp;·&nbsp; health-codex.com
                 </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
+
+      {typeof document !== 'undefined' && atlasOpen
+        ? createPortal(
+            <div
+              className="cl-atlas-lightbox cl-atlas-lightbox--stack-top"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Framework Atlas — full diagram"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setAtlasOpen(false)
+              }}
+            >
+              <div className="cl-atlas-lightbox-inner">
+                <button
+                  type="button"
+                  className="cl-atlas-lightbox-close"
+                  onClick={() => setAtlasOpen(false)}
+                  aria-label="Close"
+                >
+                  <X size={22} strokeWidth={2} />
+                </button>
+                <img
+                  src={ATLAS_IMAGE_SRC}
+                  alt="Health Codex: Regulated Software Compliance Framework Atlas — obligations, classification, SDLC lanes, lifecycle, evidence, governance, and outcomes."
+                  className="cl-atlas-lightbox-img"
+                  decoding="async"
+                />
               </div>
             </div>,
             document.body

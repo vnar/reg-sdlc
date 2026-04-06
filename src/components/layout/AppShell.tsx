@@ -107,7 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       ) : null}
 
-      <div className="mx-auto flex min-h-screen max-w-[1800px]">
+      <div className="mx-auto flex min-h-screen max-w-[1800px] min-w-0 overflow-x-clip">
         <aside
           className={clsx(
             'app-sidebar fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-slate-950/90 p-3 backdrop-blur-xl transition-all duration-300 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0',

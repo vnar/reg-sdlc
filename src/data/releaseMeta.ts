@@ -7,8 +7,8 @@ export type ReleaseCommit = {
 }
 
 export const RELEASE_META = {
-  version: 'v1.0.0',
-  latestCommit: '29f3f6b',
+  version: 'v1.5.0',
+  latestCommit: 'cb2b786',
   lastPublished: '21 Mar 2026',
   repoLabel: 'viharnar / codex',
   repoUrl: 'https://github.com/vnar/reg-sdlc',
@@ -18,10 +18,16 @@ export const RELEASE_META = {
 
 export const RELEASE_COMMITS: ReleaseCommit[] = [
   {
+    "commit": "cb2b786",
+    "date": "21 Mar 2026",
+    "message": "feat: add top-frame About modal with blur overlay",
+    "current": true
+  },
+  {
     "commit": "29f3f6b",
     "date": "21 Mar 2026",
     "message": "feat: add lightweight feedback widget with silent submit flow",
-    "current": true
+    "current": false
   },
   {
     "commit": "d8082c0",
@@ -81,12 +87,6 @@ export const RELEASE_COMMITS: ReleaseCommit[] = [
     "commit": "9bb75a2",
     "date": "20 Mar 2026",
     "message": "Apply post-review UX fixes across Codex pages.",
-    "current": false
-  },
-  {
-    "commit": "f024eff",
-    "date": "20 Mar 2026",
-    "message": "Add guarded UI regression gate for push and CI.",
     "current": false
   }
 ] as ReleaseCommit[]

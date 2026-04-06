@@ -11,7 +11,10 @@ type AssessmentOption = {
 
 type AssessmentDimension = {
   id: string
+  /** Full title in the assessment list */
   title: string
+  /** Single short line for the radar chart only (avoids overlap / center bleed) */
+  radarLabel: string
   question: string
   collapsedDescription: string
   determines: string
@@ -22,6 +25,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-1',
     title: 'Intended Use',
+    radarLabel: 'Intended use',
     question: 'Is this software intended to diagnose, treat, cure, mitigate, or prevent a disease or condition?',
     collapsedDescription: 'Is this software intended to diagnose, treat, monitor, or support clinical decision-making for patients?',
     determines: 'SaMD classification and FDA/MDR applicability',
@@ -35,6 +39,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-2',
     title: 'Regulated Output Impact',
+    radarLabel: 'Reg. output impact',
     question: 'Does the software output directly drive or influence a regulated decision?',
     collapsedDescription: 'Does the software output directly drive or influence a clinical action, lab result, or device behavior?',
     determines: 'IEC 62304 safety class (A, B, or C)',
@@ -48,6 +53,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-3',
     title: 'Device / Lab / Non-device determination',
+    radarLabel: 'Device / lab role',
     question: 'Is this software embedded in, controlling, or part of a physical device or lab instrument?',
     collapsedDescription: 'Is the software embedded in a device, standalone SaMD, a lab system, or purely enterprise-facing?',
     determines: 'Lane C vs Lane D assignment',
@@ -61,6 +67,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-4',
     title: 'Data and Privacy classification',
+    radarLabel: 'Data & privacy',
     question: 'What category of data does this software process or store?',
     collapsedDescription: 'Does the software process, store, or transmit PHI, PII, or regulated health data?',
     determines: '21 CFR Part 11 applicability and audit trail requirements',
@@ -74,6 +81,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-5',
     title: 'Cybersecurity Relevance',
+    radarLabel: 'Cybersecurity',
     question: 'Does the software have network connectivity, external APIs, or access to sensitive systems?',
     collapsedDescription: 'Does the software have network connectivity, external interfaces, or access to clinical infrastructure?',
     determines: 'Security controls tier and threat modelling requirement',
@@ -87,6 +95,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-6',
     title: 'Electronic Records / Signatures',
+    radarLabel: 'E-records / e-sign',
     question: 'Does this software create or manage records subject to 21 CFR Part 11 or equivalent?',
     collapsedDescription: 'Are electronic records or signatures used in regulated workflows such as approvals, batch records, or audit trails?',
     determines: '21 CFR Part 11 compliance obligations',
@@ -100,6 +109,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-7',
     title: 'Market / Geography',
+    radarLabel: 'Market / region',
     question: 'In which markets will this software be distributed or used?',
     collapsedDescription: 'What markets will this software be placed in — US (FDA), EU (MDR/IVDR), or both?',
     determines: 'Regulatory submission pathway and applicable standards set',
@@ -113,6 +123,7 @@ const DIMENSIONS: AssessmentDimension[] = [
   {
     id: 'CD-8',
     title: 'Software Safety Class',
+    radarLabel: 'Safety class',
     question: 'What is the consequence of a software failure on patient or user safety?',
     collapsedDescription: 'Based on the above, what is the consequence of a software failure to the patient or user?',
     determines: 'Final IEC 62304 class assignment (A = no injury, B = non-serious, C = serious/death)',
@@ -124,6 +135,13 @@ const DIMENSIONS: AssessmentDimension[] = [
     ],
   },
 ]
+
+/** Slash-separated titles → lines for hover / print only (not used on radar SVG). */
+function slashTitleParts(title: string): string[] {
+  const normalized = title.replace(/[／∕]/g, '/')
+  const parts = normalized.split(/\s*\/\s*/g).filter(Boolean)
+  return parts.length ? parts : [title]
+}
 
 const RISK_SCORE: Record<Risk, number> = { na: 0, low: 1, medium: 2, high: 3 }
 
@@ -199,24 +217,22 @@ function Radar({
   const isPrint = variant === 'print'
   const [hoveredAxis, setHoveredAxis] = useState<number | null>(null)
 
-  const titleLines = (title: string) => {
-    // Normalize uncommon slash variants, then split into lines.
-    const normalized = title.replace(/[／∕]/g, '/')
-    return normalized.split(/\s*\/\s*/g).filter(Boolean)
-  }
-
-  const W = isPrint ? 200 : 300
-  const H = isPrint ? 158 : 240
+  const W = isPrint ? 200 : 480
+  const H = isPrint ? 158 : 480
   const cx = W / 2
-  const cy = H / 2 + (isPrint ? 1 : 2)
-  const r = isPrint ? 54 : 85
+  const cy = H / 2 + (isPrint ? 1 : 0)
+  const r = isPrint ? 54 : 132
+  /** Gap from outer octagon vertex to label — tight so labels read as axis captions */
+  const labelGap = isPrint ? 10 : 14
+  const labelR = r + labelGap
   const n = values.length
 
-  const gridStroke = isPrint ? '#cbd5e1' : 'rgba(148,163,184,0.25)'
-  const labelFill = isPrint ? '#334155' : 'rgba(226,232,240,0.85)'
-  const labelFontSize = isPrint ? 5.5 : 8
-  const pad = isPrint ? 10 : 14
-  const edgeThreshold = isPrint ? 12 : 18
+  const gridStroke = isPrint ? '#cbd5e1' : 'rgba(148, 163, 184, 0.42)'
+  const axisStroke = isPrint ? '#cbd5e1' : 'rgba(148, 163, 184, 0.5)'
+  const labelFill = isPrint ? '#334155' : '#e8ecf4'
+  const labelFontSize = isPrint ? 5.5 : 11.25
+  const pad = isPrint ? 10 : 26
+  const edgeThreshold = isPrint ? 12 : 28
 
   const maxValue = 3
   const points = values.map((v, i) => {
@@ -231,18 +247,30 @@ function Radar({
   const profileRisk: Risk = maxAxis === 3 ? 'high' : maxAxis === 2 ? 'medium' : maxAxis === 1 ? 'low' : 'na'
   const c = riskColor(profileRisk)
 
-  const pointRadius = isPrint ? 2.8 : 3.5
-  const strokeWidth = isPrint ? 1.75 : 2
+  const pointRadius = isPrint ? 2.8 : 5.5
+  const strokeWidth = isPrint ? 1.75 : 2.75
+  const gridLineWidth = isPrint ? 1 : 1.15
+  const axisLineWidth = isPrint ? 1 : 1.2
 
   return (
     <div
       className={
         isPrint
           ? 'classification-print-radar rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm'
-          : 'rounded-2xl border border-white/10 bg-slate-950/30 p-3'
+          : 'classification-radar-showcase min-w-0 max-w-full rounded-2xl border border-violet-500/25 bg-gradient-to-b from-slate-900/85 via-slate-950/95 to-slate-950 p-3 shadow-[0_0_0_1px_rgba(139,92,246,0.12),0_20px_50px_rgba(0,0,0,0.45)] sm:p-4'
       }
     >
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className={
+          isPrint
+            ? 'mx-auto block w-full'
+            : 'mx-auto block aspect-square w-full max-w-full text-slate-100 [shape-rendering:geometricPrecision]'
+        }
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Eight-dimension classification radar: scores by axis from center outward"
+      >
         {[0.25, 0.5, 0.75, 1].map((f, idx) => (
           <polygon
             key={idx}
@@ -256,7 +284,7 @@ function Radar({
               .join(' ')}
             fill="none"
             stroke={gridStroke}
-            strokeWidth="1"
+            strokeWidth={gridLineWidth}
           />
         ))}
 
@@ -264,7 +292,7 @@ function Radar({
           const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
           const x = cx + Math.cos(angle) * r
           const y = cy + Math.sin(angle) * r
-          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke={gridStroke} strokeWidth="1" />
+          return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke={axisStroke} strokeWidth={axisLineWidth} />
         })}
 
         <polygon points={points.join(' ')} fill={c.fill} stroke={c.stroke} strokeWidth={strokeWidth} />
@@ -279,55 +307,60 @@ function Radar({
         {/* axis labels */}
         {DIMENSIONS.map((d, i) => {
           const angle = (-Math.PI / 2) + (i / n) * (Math.PI * 2)
-          const labelDist = isPrint ? 8 : 12
-          const rawX = cx + Math.cos(angle) * (r + labelDist)
-          const rawY = cy + Math.sin(angle) * (r + labelDist)
+          const cosA = Math.cos(angle)
+          const sinA = Math.sin(angle)
+          const rawX = cx + cosA * labelR
+          const rawY = cy + sinA * labelR
 
-          // Clamp to avoid clipping on the edges (textAnchor can extend beyond x).
           const x = Math.max(pad, Math.min(W - pad, rawX))
           const y = Math.max(pad, Math.min(H - pad, rawY))
 
-          const anchor =
-            x <= edgeThreshold ? 'start' : x >= W - edgeThreshold ? 'end' : Math.abs(Math.cos(angle)) < 0.2 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end'
-
-          const lines = titleLines(d.title)
-          const lineHeight = labelFontSize * 1.1
-          const y0 = lines.length > 1 ? y - ((lines.length - 1) / 2) * lineHeight : y
+          let anchor: 'start' | 'middle' | 'end'
+          if (isPrint) {
+            anchor =
+              x <= edgeThreshold ? 'start' : x >= W - edgeThreshold ? 'end' : Math.abs(cosA) < 0.2 ? 'middle' : cosA > 0 ? 'start' : 'end'
+          } else if (Math.abs(sinA) > Math.abs(cosA) * 1.2) {
+            anchor = 'middle'
+          } else if (cosA > 0.12) {
+            anchor = 'end'
+          } else if (cosA < -0.12) {
+            anchor = 'start'
+          } else {
+            anchor = 'middle'
+          }
 
           return (
             <text
               key={d.id}
               x={x}
-              y={y0}
+              y={y}
               textAnchor={anchor}
-              dominantBaseline="middle"
+              dominantBaseline="central"
               fontSize={labelFontSize}
+              fontWeight={isPrint ? 500 : 600}
+              letterSpacing={isPrint ? undefined : '0.01em'}
               fill={labelFill}
               style={isPrint ? undefined : { cursor: 'help' }}
               onMouseEnter={isPrint ? undefined : () => setHoveredAxis(i)}
               onMouseLeave={isPrint ? undefined : () => setHoveredAxis(null)}
             >
-              {lines.map((line, idx) => (
-                <tspan key={`${d.id}-${idx}`} x={x} dy={idx === 0 ? 0 : lineHeight}>
-                  {line}
-                </tspan>
-              ))}
+              {d.radarLabel}
             </text>
           )
         })}
       </svg>
 
       {!isPrint && hoveredAxis != null && (
-        <div className="mt-2 rounded-lg border border-white/10 bg-slate-950/20 p-2 print:hidden">
-          <p className="text-[11px] uppercase tracking-wider text-slate-400">
-            {titleLines(DIMENSIONS[hoveredAxis].title).map((line, idx) => (
+        <div className="mt-3 rounded-xl border border-white/10 bg-slate-950/50 p-3 print:hidden">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            {slashTitleParts(DIMENSIONS[hoveredAxis].title).map((line, idx) => (
               <span key={`${hoveredAxis}-t-${idx}`}>
                 {idx > 0 && <br />}
                 {line}
               </span>
             ))}
           </p>
-          <p className="mt-1 text-[13px] leading-4 text-slate-300">{DIMENSIONS[hoveredAxis].question}</p>
+          <p className="mt-1.5 text-[13px] leading-snug text-slate-200">{DIMENSIONS[hoveredAxis].question}</p>
         </div>
       )}
     </div>
@@ -670,13 +703,16 @@ export default function ClassificationAssessment() {
             </div>
           </div>
 
-          <div className="sticky top-0 space-y-4">
+          <div className="sticky top-0 min-w-0 space-y-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-slate-400">Lane assignment</p>
-              <h3 className="mt-1 text-[13px] font-semibold text-slate-50">{lane.subtitle}</h3>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Lane assignment</p>
+              <h3 className="mt-1 text-base font-semibold tracking-tight text-slate-50">{lane.subtitle}</h3>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+                Live profile by dimension — hover an axis for the full question. Completing all eight locks the lane.
+              </p>
             </div>
 
-            <div className="classification-interactive-radar">
+            <div className="classification-interactive-radar min-w-0 max-w-full">
               <Radar values={scoreValues.map((v) => v)} />
             </div>
 

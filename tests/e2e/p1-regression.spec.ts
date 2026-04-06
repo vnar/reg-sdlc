@@ -31,8 +31,9 @@ test.describe('P1 UI regressions', () => {
   test('landing hero keeps Codex rebrand labels', async ({ page }) => {
     await page.goto('/')
 
-    await expect(page.getByText('CODEX · FRAMEWORK ATLAS')).toBeVisible()
     await expect(page.getByRole('heading', { name: /Regulated Software Compliance Framework/i }).first()).toBeVisible()
+    await page.getByRole('button', { name: 'About Codex' }).click()
+    await expect(page.getByText('CODEX · FRAMEWORK ATLAS')).toBeVisible()
   })
 
   test('changelog modal opens with codex copy and tabs', async ({ page }) => {

@@ -1220,6 +1220,90 @@ body.about-open .about-bubble {
   text-transform: uppercase;
 }
 
+.about-atlas {
+  margin-bottom: 20px;
+}
+
+.about-atlas-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #475569;
+  margin: 0 0 8px;
+}
+
+.about-atlas-trigger {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.about-atlas-trigger:hover {
+  border-color: rgba(129, 140, 248, 0.45);
+  background: rgba(30, 27, 75, 0.2);
+}
+
+.about-atlas-trigger:focus-visible {
+  outline: 2px solid rgba(129, 140, 248, 0.55);
+  outline-offset: 2px;
+}
+
+.about-atlas-thumb {
+  width: 72px;
+  height: 42px;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 6px;
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.about-atlas-trigger:hover .about-atlas-thumb {
+  opacity: 1;
+}
+
+.about-atlas-trigger-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.about-atlas-trigger-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a5b4fc;
+}
+
+.about-atlas-trigger-sub {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.about-atlas-ico {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.about-atlas-trigger:hover .about-atlas-ico {
+  color: #94a3b8;
+}
+
 .about-list {
   list-style: none;
   padding: 0;
